@@ -1,17 +1,16 @@
 using backend.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
 
-var app = builder.Build();
-
+// Add CORS before building the app
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-
         policy =>
         {
             policy.WithOrigins("http://localhost:3000")
@@ -20,27 +19,51 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddHttpClient<IEventService, EventService>();
+// Register all HttpClient services before building the app
 builder.Services.AddHttpClient<IOddsService, OddsService>();
 builder.Services.AddHttpClient<IPredictorsService, PredictorsService>();
 builder.Services.AddHttpClient<IScoreService, ScoreService>();
-builder.Services.AddHttpClient<ISeasonService, SeasonService>();
 builder.Services.AddHttpClient<ITeamService, TeamService>();
-builder.Services.AddHttpClient<IWeeksService, WeeksService>();
 
+// Register WeeksService first (no dependencies on Event/Season services)
+builder.Services.AddHttpClient<WeeksService>();
+builder.Services.AddScoped<IWeeksService, WeeksService>();
 
-app.MapControllers();
+// Register EventService with its dependencies
+builder.Services.AddHttpClient<EventService>()
+    .AddTypedClient<IEventService>((client, sp) =>
+    {
+        var teamService = sp.GetRequiredService<ITeamService>();
+        var scoreService = sp.GetRequiredService<IScoreService>();
+        var oddsService = sp.GetRequiredService<IOddsService>();
+        var predictorsService = sp.GetRequiredService<IPredictorsService>();
 
-app.MapFallbackToFile("index.html");
+        return new EventService(client, teamService, scoreService, oddsService, predictorsService);
+    });
 
+// Register SeasonService with its dependencies
+builder.Services.AddHttpClient<SeasonService>()
+    .AddTypedClient<ISeasonService>((client, sp) =>
+    {
+        var weeksService = sp.GetRequiredService<IWeeksService>();
+        return new SeasonService(client, weeksService);
+    });
+
+builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
+
+// Build the app AFTER all service registrations
+var app = builder.Build();
+
+// Configure middleware
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

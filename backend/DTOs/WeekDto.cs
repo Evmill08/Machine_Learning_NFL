@@ -11,7 +11,8 @@ namespace backend.DTOs
         [JsonPropertyName("events")]
         public RefDto EventsRefs;
 
-        [JsonPropertyName("qbr")]
-        public RefDto QbrRef; // May not need, or shouldn't be here maybe
+        // Probably don't need this
+        // [JsonPropertyName("qbr")]
+        // public RefDto QbrRef; // May not need, or shouldn't be here maybe
     }
 }

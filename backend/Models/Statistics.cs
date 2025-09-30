@@ -17,7 +17,6 @@ namespace backend.Models
         public string Name;
         public string DisplayName;
         public decimal Value;
-        public decimal PerGameValue;
         public int Rank;
     }
 }

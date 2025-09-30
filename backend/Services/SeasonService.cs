@@ -1,6 +1,6 @@
 using backend.DTOs;
+using backend.Models;
 
-// TODO: Change the seasonDto type to a Season Model once we figure out details
 namespace backend.Services
 {
     public interface ISeasonService
@@ -12,10 +12,12 @@ namespace backend.Services
     public class SeasonService : ISeasonService
     {
         private readonly HttpClient _httpClient;
+        private readonly IWeeksService _weeksService;
 
-        public SeasonService(HttpClient httpClient)
+        public SeasonService(HttpClient httpClient, IWeeksService weeksService)
         {
             _httpClient = httpClient;
+            _weeksService = weeksService;
         }
 
         public async Task<Season> GetSeasonByYearAsync(int seasonYear)
@@ -25,17 +27,28 @@ namespace backend.Services
             var response = await _httpClient.GetFromJsonAsync<SeasonDto>(url)
                 ?? throw new Exception($"Error fetching {seasonYear} season data.");
 
-            // TODO: We're going to need a way to get the weeks and group from their refs here when converting from seasonDto to Season
-            return response;
+            return new Season
+            {
+                Year = response.Year,
+                StartDate = DateTime.Parse(response.StartDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                EndDate = DateTime.Parse(response.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                SeasonType = new SeasonType
+                {
+                    Id = response.Type.Id,
+                    Type = response.Type.Type,
+                    Week = await _weeksService.GetWeekByRefAsync(response.Type.WeekRef),
+                    Weeks = await _weeksService.GetAllWeeksForYearAsync(response.Year) as List<Week>,// Fix this later
+                }
+            };
         }
 
         // TODO: We need to figure out how many years we want to get here
-        public async Task<IEnumerable<SeasonDto>> GetSeasonsRangedAsync(int startYear, int endYear)
+        public async Task<IEnumerable<Season>> GetSeasonsRangedAsync(int startYear, int endYear)
         {
             var count = endYear - startYear + 1;
             var yearSequence = Enumerable.Range(startYear, count);
 
-            var seasonList = new List<SeasonDto>();
+            var seasonList = new List<Season>();
 
             foreach (var year in yearSequence)
             {

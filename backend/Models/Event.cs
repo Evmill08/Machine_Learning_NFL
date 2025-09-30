@@ -9,5 +9,7 @@ namespace backend.Models
         public string Name;
         public bool TimeValid;
         public List<Competition> Competitions;
+        public int Season;
+        public int Week;
     }
 }

@@ -14,12 +14,7 @@ namespace backend.Models
     {
         public string Id;
         public int Type;
-        public Week week;
+        public Week Week;
         public List<Week> Weeks;
-    }
-
-    public class Week
-    {
-
     }
 }

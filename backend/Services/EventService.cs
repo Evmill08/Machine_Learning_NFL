@@ -7,6 +7,7 @@ namespace backend.Services
     public interface IEventService
     {
         public Task<IEnumerable<Event>> GetEventsByWeek(int seasonYear, int weekNumber);
+        public Task<IEnumerable<Event>> GetEventsByRefAsync(RefDto eventsRef);
     }
 
     public class EventService : IEventService
@@ -69,7 +70,6 @@ namespace backend.Services
                             NuetralSite = comp.NuetralSite,
                             DivisionCompetition = comp.DivisionCompetition,
                             ConferenceCompetition = comp.ConferenceCompetition,
-
                             Competitors = (await Task.WhenAll(
                                 comp.Competitors.Select(async c => new Competitor
                                 {
@@ -84,10 +84,24 @@ namespace backend.Services
                             CompetitionOdds = await _oddsService.GetOddsAsync(comp.OddsRef),
                             CompetitionPredictors = await _predictorService.GetPredictionsAsync(comp.PredictorRef)
                         })
-                    )).ToList()
+                    )).ToList(),
+                    Season = Convert.ToInt32(response.Season),
+                    Week = Convert.ToInt32(response.Week)
                 });
             }
             return eventList;
         }
+
+        public async Task<IEnumerable<Event>> GetEventsByRefAsync(RefDto eventsRef)
+        {
+            var eventResposne = await _httpClient.GetFromJsonAsync<EventsResponseDto>(eventsRef.Ref)
+                ?? throw new Exception("Error fetching Events from Reference");
+
+            int weekNumber = Convert.ToInt32(eventResposne.EventMetadata.EventParametersDto.WeekString.FirstOrDefault());
+            int seasonNumber = Convert.ToInt32(eventResposne.EventMetadata.EventParametersDto.SeasonString.FirstOrDefault());
+
+            var eventList = await GetEventsByWeek(seasonNumber, weekNumber);
+            return eventList;
+        }
     }
-}
+} 

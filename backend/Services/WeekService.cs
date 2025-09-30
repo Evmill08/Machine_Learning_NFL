@@ -1,4 +1,5 @@
 using backend.DTOs;
+using backend.Models;
 
 // TODO:
 // Again, we need to think about the transferring from weekDto to Week Model
@@ -6,59 +7,72 @@ namespace backend.Services
 {
     public interface IWeeksService
     {
-        public Task<IEnumerable<WeekDto>> GetAllWeeksForYearAsync(int seasonYear);
+        public Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear);
 
-        public Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
+        public Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
+
+        public Task<Week> GetWeekByRefAsync(RefDto weekRef);
     }
 
     public class WeeksService : IWeeksService
     {
         private readonly HttpClient _httpClient;
+        private readonly IEventService _eventService;
 
-        public WeeksService(HttpClient httpClient)
+        public WeeksService(HttpClient httpClient, IEventService eventService)
         {
             _httpClient = httpClient;
+            _eventService = eventService;
         }
 
-        private async Task<WeeksResponseDto> GetWeekResponse(int seasonYear)
+        public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear)
         {
-            var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks?lang=en&region=us";
+            var topLevelUrl = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks?lang=en&region=us";
 
-            var response = await _httpClient.GetFromJsonAsync<WeeksResponseDto>(url)
+            var weekResponse = await _httpClient.GetFromJsonAsync<WeeksResponseDto>(topLevelUrl)
                 ?? throw new Exception($"Error fetching weeks for {seasonYear}");
 
-            return response;
-        }
+            var weekList = new List<Week>();
 
-        public async Task<IEnumerable<WeekDto>> GetAllWeeksForYearAsync(int seasonYear)
-        {
-            var weekResponse = await GetWeekResponse(seasonYear);
-
-            var weekList = new List<WeekDto>();
-
-            // We will need to extract the Week model from this week Dto,
-            // There is a lot of data caught in refs that we need in our model
             foreach (var weekRef in weekResponse.WeekRefs)
             {
                 var url = weekRef.Ref;
 
-                var week = await _httpClient.GetFromJsonAsync<WeekDto>(url)
-                    ?? throw new Exception("Error fetching week");
+                var week = await GetWeekByRefAsync(weekRef);
 
                 weekList.Add(week);
             }
-
             return weekList;
         }
 
-        public async Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
+        public async Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
         {
             var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks/{weekNumber}?lang=en&region=us";
 
             var response = await _httpClient.GetFromJsonAsync<WeekDto>(url)
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
 
-            return response;
+            return new Week
+            {
+                WeekNumber = response.Number,
+                StartDate = DateTime.Parse(response.StartDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                EndDate = DateTime.Parse(response.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                Events = await _eventService.GetEventsByRefAsync(response.EventsRefs) as List<Event>, // TODO: Fix this later
+            };
+        }
+
+        public async Task<Week> GetWeekByRefAsync(RefDto weekRef)
+        {
+            var weekResponse = await _httpClient.GetFromJsonAsync<WeekDto>(weekRef.Ref)
+                ?? throw new Exception("Error fecthing week by week reference");
+
+            return new Week
+            {
+                WeekNumber = weekResponse.Number,
+                StartDate = DateTime.Parse(weekResponse.StartDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                EndDate = DateTime.Parse(weekResponse.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                Events = await _eventService.GetEventsByRefAsync(weekResponse.EventsRefs) as List<Event>, // TODO: Fix
+            };
         }
     }
 }

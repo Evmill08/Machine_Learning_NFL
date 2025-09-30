@@ -11,6 +11,9 @@ namespace backend.DTOs
 
         [JsonPropertyName("competitions")]
         public List<CompetitionDto> Competitions;
+
+        public string Season;
+        public string Week;
     }
 
     public class CompetitionDto

@@ -1,7 +1,6 @@
 using backend.DTOs;
 using backend.Models;
 
-// TODO: Replace DTOs with models
 namespace backend.Services
 {
     public interface ITeamService
