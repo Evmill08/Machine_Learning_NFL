@@ -2,21 +2,21 @@ namespace backend.Models
 {
     public class Statistics
     {
-        public List<StatCategory> StatCategories;
+        public List<StatCategory> StatCategories { get; set; }
     }
 
     public class StatCategory
     {
-        public string Name;
-        public string DisplayName;
-        public List<CategoryStat> CategoryStats;
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
+        public List<CategoryStat> CategoryStats { get; set; }
     }
 
     public class CategoryStat
     {
-        public string Name;
-        public string DisplayName;
-        public decimal Value;
-        public int Rank;
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
+        public decimal Value { get; set; }
+        public int Rank { get; set; }
     }
 }

@@ -1,26 +1,34 @@
 
 using System.Text.Json.Serialization;
 
+// TODO: Add some inits to some of these, getting weird errors for missing data. 
 namespace backend.DTOs
 {
     public class TeamResponseDto
     {
-        public string Id;
-        public string Location;
-        public string Name;
-        public string DisplayName;
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("location")]
+        public string Location { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("displayname")]
+        public string DisplayName { get; set; }
 
         [JsonPropertyName("record")]
-        public RefDto RecordRef;
+        public RefDto RecordRef { get; set; }
 
         [JsonPropertyName("oddsRecords")]
-        public RefDto OddsRecordRef;
+        public RefDto OddsRecordRef { get; set; }
 
         [JsonPropertyName("statistics")]
-        public RefDto StatsRef;
+        public RefDto StatisticsRef { get; set; }
 
         [JsonPropertyName("injuries")]
-        public RefDto InjuriesRef;
+        public RefDto InjuriesRef { get; set; }
     }
 
     public class TeamDto
@@ -37,28 +45,32 @@ namespace backend.DTOs
 
     public class RecordResponseDto
     {
-        public int Count;
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
 
         [JsonPropertyName("items")]
-        public List<RecordDto> Records;
+        public List<RecordDto> Records { get; set; }
     }
 
     public class OddsRecordDto
     {
-        public int Count;
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
 
         [JsonPropertyName("items")]
-        public List<BookOddsRecord> OddsRecords;
+        public List<BookOddsRecord> BookOddsRecords { get; set; }
     }
 
     public class StatisticsDto
     {
-        public SplitsDto Splits;
+        [JsonPropertyName("splits")]
+        public SplitsDto Splits { get; set; }
     }
 
     public class InjuriesDto
     {
-        public int Count;
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
 
         // We Can make this more impactful by going through each injury
         // and maybe coming to some "injury heuristic" to use based on 
@@ -67,56 +79,94 @@ namespace backend.DTOs
 
     public class SplitsDto
     {
-        public string Id;
-        public string Name;
-        public List<StatCategoryDto> StatCategories;
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("categories")]
+        public List<StatCategoryDto> StatCategories { get; set; }
     }
 
     public class StatCategoryDto
     {
-        public string Name;
-        public string DisplayName;
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("displayName")]
+        public string DisplayName { get; set; }
 
         [JsonPropertyName("stats")]
-        public List<CategoryStatDto> CategoryStats;
+        public List<CategoryStatDto> CategoryStats { get; set; }
     }
 
     public class CategoryStatDto
     {
-        public string Name;
-        public string DisplayName;
-        public decimal Value;
-        public string Abbreviation;
-        public int Rank;
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("displayName")]
+        public string DisplayName { get; set; }
+
+        [JsonPropertyName("value")]
+        public decimal Value { get; set; }
+
+        [JsonPropertyName("abbreviation")]
+        public string Abbreviation { get; set; }
+
+        [JsonPropertyName("rank")]
+        public int Rank { get; set; }
     }
 
     public class BookOddsRecord
     {
-        public string Abbreviation;
-        public string ShortDisplayName;
-        public string Type;
-        public List<OddsStatDto> OddsRecordStats;
+        [JsonPropertyName("abbreviation")]
+        public string Abbreviation { get; set; }
+
+        [JsonPropertyName("shortDisplayName")]
+        public string ShortDisplayName { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("stats")]
+        public List<OddsStatDto> OddsStats { get; set; }
     }
 
     public class OddsStatDto
     {
-        public string DisplayName;
-        public string Abbreviation;
-        public string Type;
-        public decimal Value;
-        public string DisplayValue;
+        [JsonPropertyName("displayName")]
+        public string DisplayName { get; set; }
+
+        [JsonPropertyName("abbreviation")]
+        public string Abbreviation { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("value")]
+        public decimal Value { get; set; }
+
+        [JsonPropertyName("dispayValue")]
+        public string DisplayValue { get; set; }
     }
 
     public class RecordDto
     {
-        public string Id;
-        public string Name;
-        public string Summary;
-        public decimal Value;
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
+
+        [JsonPropertyName("value")]
+        public decimal Value { get; set; }
 
         [JsonPropertyName("stats")]
-        public List<StatDto> RecordStats;
+        public List<StatDto> Stats { get; set; }
     }
-
-
 }

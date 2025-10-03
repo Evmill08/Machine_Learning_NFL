@@ -5,10 +5,10 @@ namespace backend.Models
 {
     public class Statistic
     {
-        public string Name;
-        public string DisplayName;
-        public string Description;
-        public decimal Value;
-        public string DisplayValue;
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
+        public string Description { get; set; }
+        public decimal Value { get; set; }
+        public string DisplayValue { get; set; }
     }
 }

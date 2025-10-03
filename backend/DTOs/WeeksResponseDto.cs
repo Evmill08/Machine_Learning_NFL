@@ -4,9 +4,10 @@ namespace backend.DTOs
 {
     public class WeeksResponseDto
     {
-        public int Count;
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
 
         [JsonPropertyName("items")]
-        public List<RefDto> WeekRefs;
+        public List<RefDto> WeekRefs { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using System.Security.Principal;
 using backend.DTOs;
 using backend.Models;
 
@@ -32,17 +33,23 @@ namespace backend.Services
             var weekResponse = await _httpClient.GetFromJsonAsync<WeeksResponseDto>(topLevelUrl)
                 ?? throw new Exception($"Error fetching weeks for {seasonYear}");
 
-            var weekList = new List<Week>();
+            var weeks = new List<Week>();
 
-            foreach (var weekRef in weekResponse.WeekRefs)
+            using var semaphore = new SemaphoreSlim(5);
+
+            var tasks = weekResponse.WeekRefs.Select(async weekRef =>
             {
-                var url = weekRef.Ref;
+                await semaphore.WaitAsync();
+                try
+                {
+                    var week = await GetWeekByRefAsync(weekRef);
+                    lock (weeks) weeks.Add(week);
+                }
+                finally { semaphore.Release(); }
+            });
 
-                var week = await GetWeekByRefAsync(weekRef);
-
-                weekList.Add(week);
-            }
-            return weekList;
+            await Task.WhenAll(tasks);
+            return weeks.OrderBy(w => w.WeekNumber);
         }
 
         public async Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
@@ -52,12 +59,14 @@ namespace backend.Services
             var response = await _httpClient.GetFromJsonAsync<WeekDto>(url)
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
 
+            var events = await _eventService.GetEventsByRefAsync(response.EventRefs);
+
             return new Week
             {
                 WeekNumber = response.Number,
                 StartDate = DateTime.Parse(response.StartDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 EndDate = DateTime.Parse(response.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
-                Events = await _eventService.GetEventsByRefAsync(response.EventsRefs) as List<Event>, // TODO: Fix this later
+                Events = [.. events]
             };
         }
 
@@ -66,12 +75,14 @@ namespace backend.Services
             var weekResponse = await _httpClient.GetFromJsonAsync<WeekDto>(weekRef.Ref)
                 ?? throw new Exception("Error fecthing week by week reference");
 
+            var events = await _eventService.GetEventsByRefAsync(weekResponse.EventRefs);
+
             return new Week
             {
                 WeekNumber = weekResponse.Number,
                 StartDate = DateTime.Parse(weekResponse.StartDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 EndDate = DateTime.Parse(weekResponse.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
-                Events = await _eventService.GetEventsByRefAsync(weekResponse.EventsRefs) as List<Event>, // TODO: Fix
+                Events = [.. events]
             };
         }
     }

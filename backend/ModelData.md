@@ -3,6 +3,10 @@
 - Much of this will be the same, but some of it may not. 
 - We may want to extract out a common ModelData object that contains data relevant to all models, then just add the other stuff
 
+### Caching The Data:
+- This might be a pain, and maybe even unecessary (idk if espn limits our endpoint calls), but if they do, we're going to have to cache a lot of 
+- data when training the model if we can.
+
 ### The Data We Have
 - I will be listing the data (or some of it since there is a lot in some cases)
 - We can decide what is useful, and how to put it in our models

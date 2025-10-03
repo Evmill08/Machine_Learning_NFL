@@ -4,15 +4,16 @@ namespace backend.DTOs
 {
     public class WeekDto
     {
-        public int Number;
-        public string StartDate;
-        public string EndDate;
+        [JsonPropertyName("number")]
+        public int Number { get; set; }
+
+        [JsonPropertyName("startDate")]
+        public string StartDate { get; set; }
+
+        [JsonPropertyName("endDate")]
+        public string EndDate { get; set; }
 
         [JsonPropertyName("events")]
-        public RefDto EventsRefs;
-
-        // Probably don't need this
-        // [JsonPropertyName("qbr")]
-        // public RefDto QbrRef; // May not need, or shouldn't be here maybe
+        public RefDto EventRefs { get; set; }
     }
 }

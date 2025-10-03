@@ -56,29 +56,30 @@ namespace backend.Services
             var overallRecord = recordResponse.Records.Where(r => r.Name == "overall").FirstOrDefault();
             var homeRecord = recordResponse.Records.Where(r => r.Name == "Home").FirstOrDefault();
             var awayRecord = recordResponse.Records.Where(r => r.Name == "Road").FirstOrDefault();
-            var conferenceRecord = recordResponse.Records.Where(r => r.Name == "vs. Conf").FirstOrDefault();
+            var conferenceRecord = recordResponse.Records.Where(r => r.Name == "vs. Conf.").FirstOrDefault();
 
             // Since ESPN just gives us a list of "stat" objects, this is really the only option for getting the data
+            // This is just not true, I just haven't thought about it enough...
             return new Record
             {
-                AveragePointsAgainst = overallRecord.RecordStats.Where(rs => rs.Name == "avgPointsAgainst").FirstOrDefault().Value,
-                AveragePointsFor = overallRecord.RecordStats.Where(rs => rs.Name == "avgPointsFor").FirstOrDefault().Value,
-                PointDifferential = overallRecord.RecordStats.Where(rs => rs.Name == "differential").FirstOrDefault().Value,
-                DivisionWinPercent = overallRecord.RecordStats.Where(rs => rs.Name == "divisionWinPercent").FirstOrDefault().Value,
-                LeagueWinPercent = overallRecord.RecordStats.Where(rs => rs.Name == "leagueWinPercent").FirstOrDefault().Value,
-                Losses = Convert.ToInt16(overallRecord.RecordStats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
-                Streak = Convert.ToInt32(overallRecord.RecordStats.Where(rs => rs.Name == "streak").FirstOrDefault().Value),
-                Wins = Convert.ToInt32(overallRecord.RecordStats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
-                Ties = Convert.ToInt32(overallRecord.RecordStats.Where(rs => rs.Name == "ties").FirstOrDefault().Value),
-                WinPercent = overallRecord.RecordStats.Where(rs => rs.Name == "winPercent").FirstOrDefault().Value,
-                DivisionLosses = Convert.ToInt32(overallRecord.RecordStats.Where(rs => rs.Name == "divisionLosses").FirstOrDefault().Value),
-                DivisionWins = Convert.ToInt32(overallRecord.RecordStats.Where(rs => rs.Name == "divisionWins").FirstOrDefault().Value),
-                HomeWins = Convert.ToInt32(homeRecord.RecordStats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
-                HomeLosses = Convert.ToInt32(homeRecord.RecordStats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
-                AwayWins = Convert.ToInt32(awayRecord.RecordStats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
-                AwayLosses = Convert.ToInt32(awayRecord.RecordStats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
-                ConferenceLosses = Convert.ToInt32(conferenceRecord.RecordStats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
-                ConferenceWins = Convert.ToInt32(conferenceRecord.RecordStats.Where(rs => rs.Name == "wins").FirstOrDefault().Value)
+                AveragePointsAgainst = overallRecord.Stats.Where(rs => rs.Name == "avgPointsAgainst").FirstOrDefault().Value,
+                AveragePointsFor = overallRecord.Stats.Where(rs => rs.Name == "avgPointsFor").FirstOrDefault().Value,
+                PointDifferential = overallRecord.Stats.Where(rs => rs.Name == "differential").FirstOrDefault().Value,
+                DivisionWinPercent = overallRecord.Stats.Where(rs => rs.Name == "divisionWinPercent").FirstOrDefault().Value,
+                LeagueWinPercent = overallRecord.Stats.Where(rs => rs.Name == "leagueWinPercent").FirstOrDefault().Value,
+                Losses = Convert.ToInt16(overallRecord.Stats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
+                Streak = Convert.ToInt32(overallRecord.Stats.Where(rs => rs.Name == "streak").FirstOrDefault().Value),
+                Wins = Convert.ToInt32(overallRecord.Stats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
+                Ties = Convert.ToInt32(overallRecord.Stats.Where(rs => rs.Name == "ties").FirstOrDefault().Value),
+                WinPercent = overallRecord.Stats.Where(rs => rs.Name == "winPercent").FirstOrDefault().Value,
+                DivisionLosses = Convert.ToInt32(overallRecord.Stats.Where(rs => rs.Name == "divisionLosses").FirstOrDefault().Value),
+                DivisionWins = Convert.ToInt32(overallRecord.Stats.Where(rs => rs.Name == "divisionWins").FirstOrDefault().Value),
+                HomeWins = Convert.ToInt32(homeRecord.Stats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
+                HomeLosses = Convert.ToInt32(homeRecord.Stats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
+                AwayWins = Convert.ToInt32(awayRecord.Stats.Where(rs => rs.Name == "wins").FirstOrDefault().Value),
+                AwayLosses = Convert.ToInt32(awayRecord.Stats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
+                ConferenceLosses = Convert.ToInt32(conferenceRecord.Stats.Where(rs => rs.Name == "losses").FirstOrDefault().Value),
+                ConferenceWins = Convert.ToInt32(conferenceRecord.Stats.Where(rs => rs.Name == "wins").FirstOrDefault().Value)
             };
         }
 
@@ -88,16 +89,16 @@ namespace backend.Services
             var oddsResponse = await _httpClient.GetFromJsonAsync<OddsRecordDto>(teamResponse.OddsRecordRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
-            var ML = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ML").FirstOrDefault();
-            var homeML = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ML HOME").FirstOrDefault();
-            var awayML = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ML AWAY").FirstOrDefault();
-            var underdogML = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ML UND").FirstOrDefault();
-            var favoriteML = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ML FAV").FirstOrDefault();
-            var Spread = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ATS").FirstOrDefault();
-            var homeSpread = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ATS HOME").FirstOrDefault();
-            var awaySpread = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ATS AWAY").FirstOrDefault();
-            var underdogSpread = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ATS UND").FirstOrDefault();
-            var favoriteSpread = oddsResponse.OddsRecords.Where(or => or.Abbreviation == "ATS FAV").FirstOrDefault();
+            var ML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML").FirstOrDefault();
+            var homeML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML HOME").FirstOrDefault();
+            var awayML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML AWAY").FirstOrDefault();
+            var underdogML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML UND").FirstOrDefault();
+            var favoriteML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML FAV").FirstOrDefault();
+            var Spread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS").FirstOrDefault();
+            var homeSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS HOME").FirstOrDefault();
+            var awaySpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS AWAY").FirstOrDefault();
+            var underdogSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS UND").FirstOrDefault();
+            var favoriteSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS FAV").FirstOrDefault();
 
             var OddsList = new List<BookOddsRecord> { ML, homeML, awayML, underdogML, favoriteML, Spread, homeSpread, awaySpread, underdogSpread, favoriteSpread };
             var OddsRecordList = new List<OddsStat>();
@@ -118,14 +119,14 @@ namespace backend.Services
             return new OddsStat
             {
                 OddsRecord = bookOdds.ShortDisplayName,
-                Wins = Convert.ToInt32(bookOdds.OddsRecordStats.Where(os => os.Abbreviation == "W").FirstOrDefault().Value),
-                Losses = Convert.ToInt32(bookOdds.OddsRecordStats.Where(os => os.Abbreviation == "L").FirstOrDefault().Value)
+                Wins = Convert.ToInt32(bookOdds.OddsStats.Where(os => os.Abbreviation == "W").FirstOrDefault().Value),
+                Losses = Convert.ToInt32(bookOdds.OddsStats.Where(os => os.Abbreviation == "L").FirstOrDefault().Value)
             };
         }
 
         private async Task<Statistics> GetTeamStatisticsAsync(TeamResponseDto teamResponse)
         {
-            var statsResponse = await _httpClient.GetFromJsonAsync<StatisticsDto>(teamResponse.StatsRef.Ref)
+            var statsResponse = await _httpClient.GetFromJsonAsync<StatisticsDto>(teamResponse.StatisticsRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
             return new Statistics

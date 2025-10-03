@@ -2,52 +2,52 @@ namespace backend.Models
 {
     public class Team
     {
-        public string Id;
-        public string Location;
-        public string Name;
-        public string DisplayName;
-        public Record Record;
-        public OddsRecord OddsRecord;
-        public Statistics Statistics;
-        public Injuries Injuries;
+        public string Id { get; set; }
+        public string Location { get; set; }
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
+        public Record Record { get; set; }
+        public OddsRecord OddsRecord { get; set; }
+        public Statistics Statistics { get; set; }
+        public Injuries Injuries { get; set; }
     }
 
     public class Record
     {
-        public int Wins;
-        public int Losses;
-        public decimal AveragePointsAgainst;
-        public decimal AveragePointsFor;
-        public decimal PointDifferential;
-        public decimal DivisionWinPercent;
-        public decimal LeagueWinPercent;
-        public int Streak;
-        public int Ties;
-        public decimal WinPercent;
-        public int DivisionLosses;
-        public int DivisionWins;
-        public int HomeWins;
-        public int HomeLosses;
-        public int AwayWins;
-        public int AwayLosses;
-        public int ConferenceWins;
-        public int ConferenceLosses;
+        public int Wins { get; set; }
+        public int Losses { get; set; }
+        public decimal AveragePointsAgainst { get; set; }
+        public decimal AveragePointsFor { get; set; }
+        public decimal PointDifferential { get; set; }
+        public decimal DivisionWinPercent { get; set; }
+        public decimal LeagueWinPercent { get; set; }
+        public int Streak { get; set; }
+        public int Ties { get; set; }
+        public decimal WinPercent { get; set; }
+        public int DivisionLosses { get; set; }
+        public int DivisionWins { get; set; }
+        public int HomeWins { get; set; }
+        public int HomeLosses { get; set; }
+        public int AwayWins { get; set; }
+        public int AwayLosses { get; set; }
+        public int ConferenceWins { get; set; }
+        public int ConferenceLosses { get; set; }
     }
 
     public class OddsRecord
     {
-        public List<OddsStat> OddsStats;
+        public List<OddsStat> OddsStats { get; set; }
     }
 
     public class OddsStat
     {
-        public string OddsRecord;
-        public int Wins;
-        public int Losses;
+        public string OddsRecord { get; set; }
+        public int Wins { get; set; }
+        public int Losses { get; set; }
     }
 
     public class Injuries
     {
-        public int InjuryCount;
+        public int InjuryCount { get; set; }
     }
 }

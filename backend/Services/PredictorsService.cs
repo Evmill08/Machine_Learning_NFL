@@ -26,7 +26,7 @@ namespace backend.Services
             {
                 Name = predictorResponse.Name,
                 ShortName = predictorResponse.ShortName,
-                LastModified = DateTime.Parse(predictorResponse.lastModified, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                LastModified = DateTime.Parse(predictorResponse.LastModified, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 HomeTeamPredictors = new TeamPredictor
                 {
                     Predictors = predictorResponse.HomeTeamPredictions.Predictors.

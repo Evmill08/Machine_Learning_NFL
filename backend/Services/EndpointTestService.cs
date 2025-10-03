@@ -1,16 +1,22 @@
-using System.Net.Security;
+using backend.DTOs;
 using backend.Models;
 using backend.Services;
+using Microsoft.OpenApi.Validations;
 
 namespace backend.Services
 {
     public interface IEndpointTestService
     {
-        public Task TestSeasonEndpointAysnc();
+        public Task<Season?> TestSeasonEndpointAysnc();
 
-        public Task TestWeekEndpointAsync();
+        public Task<IEnumerable<Week?>> TestWeekEndpointAsync();
 
-        public Task TestEventsEndpointAsync();
+        public Task<IEnumerable<Event?>> TestEventsEndpointAsync();
+
+        public Task<Odds?> TestOddsEndpointAsync();
+
+        public Task<Event?> GetEventDataTestAsync();
+        public Task<Team?> GetTeamDataTestAsync();
 
     }
     public class EndpointTestService : IEndpointTestService
@@ -43,28 +49,62 @@ namespace backend.Services
 
         public const int seasonYear = 2025;
 
-        public async Task TestSeasonEndpointAysnc()
+        public async Task<Season?> TestSeasonEndpointAysnc()
         {
             var seasonResponse = await _seasonService.GetSeasonByYearAsync(seasonYear)
                 ?? throw new Exception("Error fetching Season");
+
+            return seasonResponse;
         }
 
-        public async Task TestWeekEndpointAsync()
+        public async Task<IEnumerable<Week?>> TestWeekEndpointAsync()
         {
             var weekResponse = await _weeksService.GetAllWeeksForYearAsync(seasonYear)
                 ?? throw new Exception("Error fetching weeks");
+
+            return weekResponse;
         }
 
-        public async Task TestEventsEndpointAsync()
+        public async Task<IEnumerable<Event?>> TestEventsEndpointAsync()
         {
             int weekNumber = 2;
             var eventResponse = await _eventService.GetEventsByWeek(seasonYear, weekNumber)
                 ?? throw new Exception("Error fetching events");
+
+            return eventResponse;
         }
 
+        public async Task<Odds?> TestOddsEndpointAsync()
+        {
+            var oddsRef = new RefDto
+            {
+                Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/401772938/competitions/401772938/odds?lang=en&region=us"
+            };
 
+            var oddsResponse = await _oddsService.GetOddsAsync(oddsRef);
+            return oddsResponse;
+        }
 
+        public async Task<Event?> GetEventDataTestAsync()
+        {
+            var eventRef = new RefDto
+            {
+                Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/401772939?lang=en&region=us"
+            };
 
+            var eventResponse = await _eventService.GetEventByRefAsync(eventRef);
+            return eventResponse;
+        }
 
+        public async Task<Team?> GetTeamDataTestAsync()
+        {
+            var teamRef = new RefDto
+            {
+                Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/14?lang=en&region=us"
+            };
+
+            var teamResponse = await _teamService.GetTeamAsync(teamRef);
+            return teamResponse;
+        }
     }
 }

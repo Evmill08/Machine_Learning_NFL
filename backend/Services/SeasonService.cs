@@ -48,15 +48,25 @@ namespace backend.Services
             var count = endYear - startYear + 1;
             var yearSequence = Enumerable.Range(startYear, count);
 
-            var seasonList = new List<Season>();
+            var seasons = new List<Season>();
 
-            foreach (var year in yearSequence)
+            // Allows 5 http calls at time to prevent overloading the server 
+            using var semaphore = new SemaphoreSlim(5);
+
+            var tasks = yearSequence.Select(async year =>
             {
-                var season = await GetSeasonByYearAsync(year);
-                seasonList.Add(season);
-            }
+                await semaphore.WaitAsync();
+                try
+                {
+                    var season = await GetSeasonByYearAsync(year);
+                    lock (seasons) seasons.Add(season);
+                }
+                finally { semaphore.Release(); }
+            });
 
-            return seasonList;
+            await Task.WhenAll(tasks);
+
+            return seasons.OrderBy(s => s.Year);
         }
     }
 }
