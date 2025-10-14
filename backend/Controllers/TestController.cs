@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using backend.Models;
 using backend.Services;
@@ -58,6 +59,20 @@ namespace backend.Controllers
         public async Task<IActionResult> TestTeamData()
         {
             var response = await _endpointTestService.GetTeamDataTestAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("predictionData")]
+        public async Task<IActionResult> TestPredictionDataForEvent()
+        {
+            var response = await _endpointTestService.GetPredictionDataForEventTestAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("allPredictionData")]
+        public async Task<IActionResult> TestPredictionData()
+        {
+            var response = await _endpointTestService.GetPredictionDataAsync();
             return Ok(response);
         }
     }

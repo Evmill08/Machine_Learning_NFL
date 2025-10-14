@@ -1,5 +1,6 @@
 using backend.DTOs;
 using backend.Models;
+using backend.Utilities;
 
 namespace backend.Services
 {
@@ -19,7 +20,7 @@ namespace backend.Services
 
         public async Task<Team> GetTeamAsync(RefDto teamRef)
         {
-            var teamResponse = await _httpClient.GetFromJsonAsync<TeamResponseDto>(teamRef.Ref)
+            var teamResponse = await _httpClient.GetFromJsonResilientAsync<TeamResponseDto>(teamRef.Ref)
                 ?? throw new Exception("Error fetching team data");
 
             var Team = await FillTeamDataAsync(teamResponse);
@@ -50,7 +51,7 @@ namespace backend.Services
 
         private async Task<Record> GetTeamRecordAsync(TeamResponseDto teamResponse)
         {
-            var recordResponse = await _httpClient.GetFromJsonAsync<RecordResponseDto>(teamResponse.RecordRef.Ref)
+            var recordResponse = await _httpClient.GetFromJsonResilientAsync<RecordResponseDto>(teamResponse.RecordRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
             var overallRecord = recordResponse.Records.Where(r => r.Name == "overall").FirstOrDefault();
@@ -86,32 +87,26 @@ namespace backend.Services
         // TODO: This is stupid, find a way to clean this up
         private async Task<OddsRecord> GetTeamOddsRecordAsync(TeamResponseDto teamResponse)
         {
-            var oddsResponse = await _httpClient.GetFromJsonAsync<OddsRecordDto>(teamResponse.OddsRecordRef.Ref)
+
+            if (teamResponse.OddsRecordRef == null || string.IsNullOrEmpty(teamResponse.OddsRecordRef.Ref))
+                return new OddsRecord { OddsStats = new List<OddsStat>() };
+
+            var oddsResponse = await _httpClient.GetFromJsonResilientAsync<OddsRecordDto>(teamResponse.OddsRecordRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
-            var ML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML").FirstOrDefault();
-            var homeML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML HOME").FirstOrDefault();
-            var awayML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML AWAY").FirstOrDefault();
-            var underdogML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML UND").FirstOrDefault();
-            var favoriteML = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ML FAV").FirstOrDefault();
-            var Spread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS").FirstOrDefault();
-            var homeSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS HOME").FirstOrDefault();
-            var awaySpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS AWAY").FirstOrDefault();
-            var underdogSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS UND").FirstOrDefault();
-            var favoriteSpread = oddsResponse.BookOddsRecords.Where(or => or.Abbreviation == "ATS FAV").FirstOrDefault();
+            var abbreviations = new[] { "ML", "ML HOME", "ML AWAY", "ML UND", "ML FAV",
+                            "ATS", "ATS HOME", "ATS AWAY", "ATS UND", "ATS FAV" };
 
-            var OddsList = new List<BookOddsRecord> { ML, homeML, awayML, underdogML, favoriteML, Spread, homeSpread, awaySpread, underdogSpread, favoriteSpread };
-            var OddsRecordList = new List<OddsStat>();
+            var oddsRecords = oddsResponse?.BookOddsRecords ?? new List<BookOddsRecord>();
+            var oddsList = abbreviations
+                .Select(abbr => oddsRecords.FirstOrDefault(or => or.Abbreviation == abbr))
+                .ToList();
 
-            foreach (var odds in OddsList)
-            {
-                OddsRecordList.Add(GetOddsStatForCategory(odds));
-            }
+            var oddsRecordList = oddsList
+                .Select(o => GetOddsStatForCategory(o))
+                .ToList();
 
-            return new OddsRecord
-            {
-                OddsStats = OddsRecordList
-            };
+            return new OddsRecord { OddsStats = oddsRecordList };
         }
 
         private OddsStat GetOddsStatForCategory(BookOddsRecord bookOdds)
@@ -126,7 +121,7 @@ namespace backend.Services
 
         private async Task<Statistics> GetTeamStatisticsAsync(TeamResponseDto teamResponse)
         {
-            var statsResponse = await _httpClient.GetFromJsonAsync<StatisticsDto>(teamResponse.StatisticsRef.Ref)
+            var statsResponse = await _httpClient.GetFromJsonResilientAsync<StatisticsDto>(teamResponse.StatisticsRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
             return new Statistics
@@ -148,7 +143,7 @@ namespace backend.Services
 
         private async Task<Injuries> GetTeamInjuriesAsync(TeamResponseDto teamResponse)
         {
-            var injuriesResponse = await _httpClient.GetFromJsonAsync<InjuriesDto>(teamResponse.InjuriesRef.Ref)
+            var injuriesResponse = await _httpClient.GetFromJsonResilientAsync<InjuriesDto>(teamResponse.InjuriesRef.Ref)
                 ?? throw new Exception("Error fetching team record");
 
             return new Injuries

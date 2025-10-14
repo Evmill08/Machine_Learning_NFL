@@ -8,15 +8,13 @@ namespace backend.Services
     public interface IEndpointTestService
     {
         public Task<Season?> TestSeasonEndpointAysnc();
-
         public Task<IEnumerable<Week?>> TestWeekEndpointAsync();
-
         public Task<IEnumerable<Event?>> TestEventsEndpointAsync();
-
         public Task<Odds?> TestOddsEndpointAsync();
-
         public Task<Event?> GetEventDataTestAsync();
         public Task<Team?> GetTeamDataTestAsync();
+        public Task<PredictionData> GetPredictionDataForEventTestAsync();
+        public Task<IEnumerable<PredictionData>> GetPredictionDataAsync();
 
     }
     public class EndpointTestService : IEndpointTestService
@@ -28,6 +26,7 @@ namespace backend.Services
         private readonly ISeasonService _seasonService;
         private readonly ITeamService _teamService;
         private readonly IWeeksService _weeksService;
+        private readonly IPredictionDataService _predictionDataService;
 
         public EndpointTestService(
             IEventService eventService,
@@ -36,7 +35,8 @@ namespace backend.Services
             IScoreService scoreService,
             ISeasonService seasonService,
             ITeamService teamService,
-            IWeeksService weeksService)
+            IWeeksService weeksService,
+            IPredictionDataService predictionDataService)
         {
             _eventService = eventService;
             _oddsService = oddsService;
@@ -45,6 +45,7 @@ namespace backend.Services
             _seasonService = seasonService;
             _teamService = teamService;
             _weeksService = weeksService;
+            _predictionDataService = predictionDataService;
         }
 
         public const int seasonYear = 2025;
@@ -105,6 +106,17 @@ namespace backend.Services
 
             var teamResponse = await _teamService.GetTeamAsync(teamRef);
             return teamResponse;
+        }
+
+        public async Task<PredictionData> GetPredictionDataForEventTestAsync()
+        {
+            var e = await GetEventDataTestAsync();
+            return _predictionDataService.GetPredictionDataForEvent(e);
+        }
+
+        public async Task<IEnumerable<PredictionData>> GetPredictionDataAsync()
+        {
+            return await _predictionDataService.GetPredictionDataForTimeframe(2023, 2024);
         }
     }
 }

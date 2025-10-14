@@ -1,4 +1,4 @@
-using System.Security.Principal;
+using backend.Utilities;
 using backend.DTOs;
 using backend.Models;
 
@@ -13,6 +13,7 @@ namespace backend.Services
         public Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
 
         public Task<Week> GetWeekByRefAsync(RefDto weekRef);
+        public Task<int> GetWeekNumberAsync();
     }
 
     public class WeeksService : IWeeksService
@@ -30,7 +31,7 @@ namespace backend.Services
         {
             var topLevelUrl = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks?lang=en&region=us";
 
-            var weekResponse = await _httpClient.GetFromJsonAsync<WeeksResponseDto>(topLevelUrl)
+            var weekResponse = await _httpClient.GetFromJsonResilientAsync<WeeksResponseDto>(topLevelUrl)
                 ?? throw new Exception($"Error fetching weeks for {seasonYear}");
 
             var weeks = new List<Week>();
@@ -56,7 +57,7 @@ namespace backend.Services
         {
             var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks/{weekNumber}?lang=en&region=us";
 
-            var response = await _httpClient.GetFromJsonAsync<WeekDto>(url)
+            var response = await _httpClient.GetFromJsonResilientAsync<WeekDto>(url)
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
 
             var events = await _eventService.GetEventsByRefAsync(response.EventRefs);
@@ -72,7 +73,7 @@ namespace backend.Services
 
         public async Task<Week> GetWeekByRefAsync(RefDto weekRef)
         {
-            var weekResponse = await _httpClient.GetFromJsonAsync<WeekDto>(weekRef.Ref)
+            var weekResponse = await _httpClient.GetFromJsonResilientAsync<WeekDto>(weekRef.Ref)
                 ?? throw new Exception("Error fecthing week by week reference");
 
             var events = await _eventService.GetEventsByRefAsync(weekResponse.EventRefs);
@@ -84,6 +85,15 @@ namespace backend.Services
                 EndDate = DateTime.Parse(weekResponse.EndDate, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 Events = [.. events]
             };
+        }
+
+        public async Task<int> GetWeekNumberAsync()
+        {
+            var url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
+
+            var response = await _httpClient.GetFromJsonResilientAsync<ScoreboardDto>(url);
+            return response?.scoreBoardWeek.WeekNumber 
+                ?? throw new Exception("Error fetching week number");
         }
     }
 }

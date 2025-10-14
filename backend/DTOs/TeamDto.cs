@@ -58,7 +58,7 @@ namespace backend.DTOs
         public int Count { get; set; }
 
         [JsonPropertyName("items")]
-        public List<BookOddsRecord> BookOddsRecords { get; set; }
+        public List<BookOddsRecord> BookOddsRecords { get; set; } = new();
     }
 
     public class StatisticsDto

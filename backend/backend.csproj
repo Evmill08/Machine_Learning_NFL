@@ -7,12 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
   </ItemGroup>
 
   <Target Name="CopyReactBuild" AfterTargets="Build">
     <Exec Command="npm run build --prefix ../frontend" />
-    <Exec Command='xcopy "..\frontend\build" "wwwroot" /E /Y /I' />
+    <Exec Command="xcopy &quot;..\frontend\build&quot; &quot;wwwroot&quot; /E /Y /I" />
   </Target>
 
 </Project>

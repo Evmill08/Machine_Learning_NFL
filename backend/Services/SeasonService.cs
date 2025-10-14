@@ -1,5 +1,6 @@
 using backend.DTOs;
 using backend.Models;
+using backend.Utilities;
 
 namespace backend.Services
 {
@@ -22,10 +23,12 @@ namespace backend.Services
 
         public async Task<Season> GetSeasonByYearAsync(int seasonYear)
         {
-            var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}?lang=en&region=us";
+            var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/?lang=en&region=us";
 
-            var response = await _httpClient.GetFromJsonAsync<SeasonDto>(url)
+            var response = await _httpClient.GetFromJsonResilientAsync<SeasonDto>(url)
                 ?? throw new Exception($"Error fetching {seasonYear} season data.");
+
+            var weeks = await _weeksService.GetAllWeeksForYearAsync(response.Year);
 
             return new Season
             {
@@ -36,8 +39,7 @@ namespace backend.Services
                 {
                     Id = response.Type.Id,
                     Type = response.Type.Type,
-                    Week = await _weeksService.GetWeekByRefAsync(response.Type.WeekRef),
-                    Weeks = await _weeksService.GetAllWeeksForYearAsync(response.Year) as List<Week>,// Fix this later
+                    Weeks = weeks.ToList(),
                 }
             };
         }

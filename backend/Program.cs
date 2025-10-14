@@ -37,8 +37,9 @@ builder.Services.AddHttpClient<EventService>()
         var scoreService = sp.GetRequiredService<IScoreService>();
         var oddsService = sp.GetRequiredService<IOddsService>();
         var predictorsService = sp.GetRequiredService<IPredictorsService>();
+        var weeksService = sp.GetRequiredService<IWeeksService>();
 
-        return new EventService(client, teamService, scoreService, oddsService, predictorsService);
+        return new EventService(client, teamService, scoreService, oddsService, predictorsService, weeksService);
     });
 
 // Register SeasonService with its dependencies
@@ -50,6 +51,8 @@ builder.Services.AddHttpClient<SeasonService>()
     });
 
 builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
+builder.Services.AddScoped<IPredictionDataService, PredictionDataService>();
+builder.Services.AddScoped<IExcelService, ExcelService>();
 
 // Build the app AFTER all service registrations
 var app = builder.Build();
@@ -62,7 +65,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

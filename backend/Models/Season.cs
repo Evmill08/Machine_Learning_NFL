@@ -14,7 +14,6 @@ namespace backend.Models
     {
         public string Id { get; set; }
         public int Type { get; set; }
-        public Week Week { get; set; }
         public List<Week> Weeks { get; set; }
     }
 }

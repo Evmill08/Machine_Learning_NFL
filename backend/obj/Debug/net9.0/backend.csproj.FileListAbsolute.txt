@@ -45,3 +45,11 @@ C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compress
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\qe3nn00lt3-kmpxxtsv97.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\wivnymnnl8-q9dm4vlmoc.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\kjx9ixov44-8ihvmgktlb.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\ClosedXML.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\ClosedXML.Parser.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\DocumentFormat.OpenXml.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\DocumentFormat.OpenXml.Framework.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\ExcelNumberFormat.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\RBush.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\SixLabors.Fonts.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\System.IO.Packaging.dll

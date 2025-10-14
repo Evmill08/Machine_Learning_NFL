@@ -1,5 +1,6 @@
 using backend.DTOs;
 using backend.Models;
+using backend.Utilities;
 
 namespace backend.Services
 {
@@ -19,7 +20,7 @@ namespace backend.Services
 
         public async Task<Predictors> GetPredictionsAsync(RefDto predictorRef)
         {
-            var predictorResponse = await _httpClient.GetFromJsonAsync<PredictorDto>(predictorRef.Ref)
+            var predictorResponse = await _httpClient.GetFromJsonResilientAsync<PredictorDto>(predictorRef.Ref)
                 ?? throw new Exception("Error fetching predictors");
 
             return new Predictors

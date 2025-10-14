@@ -1,5 +1,6 @@
 using backend.DTOs;
 using backend.Models;
+using backend.Utilities;
 
 namespace backend.Services
 {
@@ -32,7 +33,7 @@ namespace backend.Services
                 };
             }
 
-            var oddsResponse = await _httpclient.GetFromJsonAsync<OddsResponseDto>(oddsRef.Ref)
+            var oddsResponse = await _httpclient.GetFromJsonResilientAsync<OddsResponseDto>(oddsRef.Ref)
                 ?? throw new Exception("Error fetchings odds response");
 
             // Can probably clean this up a bit, but since 2025 games don't have odds data for future weeks, we can get divide by 0 errors 
