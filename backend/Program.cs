@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders().AddConsole().SetMinimumLevel(LogLevel.Debug);
+
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
