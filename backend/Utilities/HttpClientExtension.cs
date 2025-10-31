@@ -21,7 +21,7 @@ namespace backend.Utilities
                 try
                 {
                     // Small random jitter to avoid synchronized bursts
-                    await Task.Delay(Random.Shared.Next(150, 400));
+                    await Task.Delay(Random.Shared.Next(300, 800));
 
                     var result = await client.GetFromJsonAsync<T>(url, jsonOptions);
                     return result;

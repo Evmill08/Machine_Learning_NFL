@@ -22,10 +22,17 @@ namespace backend.Controllers
         }
 
         [HttpGet("week")]
-        public async Task<IActionResult> GetPredictionDataForGame()
+        public async Task<IActionResult> GetPredictionDataForWeek()
         {
-            await _excelService.ExportGameDataToExcelAsync();
+            await _excelService.ExportWeekDataToExcelAsync();
             return Ok("NFL_Predictions updated with current games");
+        }
+
+        [HttpGet("year")]
+        public async Task<IActionResult> GetPredictionDataForYear()
+        {
+            await _excelService.ExportYearDataToExcelAsync();
+            return Ok("NFL_Predictions updated with this years games");
         }
     }
 }

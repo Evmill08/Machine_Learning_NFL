@@ -53,7 +53,7 @@ namespace backend.Services
             var seasons = new List<Season>();
 
             // Allows 5 http calls at time to prevent overloading the server 
-            using var semaphore = new SemaphoreSlim(5);
+            using var semaphore = new SemaphoreSlim(4);
 
             var tasks = yearSequence.Select(async year =>
             {

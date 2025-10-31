@@ -19,12 +19,12 @@ namespace backend.Services
     public class WeeksService : IWeeksService
     {
         private readonly HttpClient _httpClient;
-        private readonly IEventService _eventService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public WeeksService(HttpClient httpClient, IEventService eventService)
+        public WeeksService(HttpClient httpClient, IServiceProvider serviceProvider)
         {
             _httpClient = httpClient;
-            _eventService = eventService;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear)
@@ -36,7 +36,7 @@ namespace backend.Services
 
             var weeks = new List<Week>();
 
-            using var semaphore = new SemaphoreSlim(5);
+            using var semaphore = new SemaphoreSlim(4);
 
             var tasks = weekResponse.WeekRefs.Select(async weekRef =>
             {
@@ -60,7 +60,9 @@ namespace backend.Services
             var response = await _httpClient.GetFromJsonResilientAsync<WeekDto>(url)
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
 
-            var events = await _eventService.GetEventsByRefAsync(response.EventRefs);
+            // Resolve IEventService lazily only when needed
+            var eventService = _serviceProvider.GetRequiredService<IEventService>();
+            var events = await eventService.GetEventsByRefAsync(response.EventRefs);
 
             return new Week
             {
@@ -76,7 +78,9 @@ namespace backend.Services
             var weekResponse = await _httpClient.GetFromJsonResilientAsync<WeekDto>(weekRef.Ref)
                 ?? throw new Exception("Error fecthing week by week reference");
 
-            var events = await _eventService.GetEventsByRefAsync(weekResponse.EventRefs);
+            // Resolve IEventService lazily only when needed
+            var eventService = _serviceProvider.GetRequiredService<IEventService>();
+            var events = await eventService.GetEventsByRefAsync(weekResponse.EventRefs);
 
             return new Week
             {
@@ -92,7 +96,7 @@ namespace backend.Services
             var url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
 
             var response = await _httpClient.GetFromJsonResilientAsync<ScoreboardDto>(url);
-            return response?.scoreBoardWeek.WeekNumber 
+            return response?.scoreBoardWeek.WeekNumber
                 ?? throw new Exception("Error fetching week number");
         }
     }

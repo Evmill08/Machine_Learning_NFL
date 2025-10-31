@@ -12,6 +12,8 @@ namespace backend.Models
         public int HomeWin { get; set; } // this is money line, 0 if home
         public int SeasonYear { get; set; }
         public int WeekNumber { get; set; }
+        public string HomeTeamName { get; set; }
+        public string AwayTeamName { get; set; }
         public int NuetralSite { get; set; } // 1 if true 
         public int DivisionCompetition { get; set; } // 1 if true
         public int ConferenceCompetition { get; set; } // 1 if true

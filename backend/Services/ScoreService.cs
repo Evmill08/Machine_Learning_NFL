@@ -1,5 +1,6 @@
 using backend.Models;
 using backend.DTOs;
+using backend.Utilities;
 
 namespace backend.Services
 {
@@ -19,7 +20,7 @@ namespace backend.Services
 
         public async Task<Score> GetTeamScoreAsync(RefDto scoreRef)
         {
-            var scoreResponse = await _httpClient.GetFromJsonAsync<ScoreDto>(scoreRef.Ref)
+            var scoreResponse = await _httpClient.GetFromJsonResilientAsync<ScoreDto>(scoreRef.Ref)
                 ?? throw new Exception("Error fetching score for competitor");
 
             return new Score

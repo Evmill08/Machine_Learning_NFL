@@ -8,6 +8,7 @@ namespace backend.Services
     public interface IPredictionDataService
     {
         public Task<IEnumerable<PredictionData>> GetPredictionDataForTimeframe(int startYear, int EndYear);
+        public Task<IEnumerable<PredictionData>> GetPredictionDataForYear(int year);
         public PredictionData GetPredictionDataForEvent(Event game);
     }
 
@@ -25,7 +26,7 @@ namespace backend.Services
             var seasons = await _seasonService.GetSeasonsRangedAsync(startYear, endYear);
 
             var predictionData = new ConcurrentBag<PredictionData>();
-            using var semaphore = new SemaphoreSlim(10); // global cap for total work
+            using var semaphore = new SemaphoreSlim(4); // global cap for total work
 
             var tasks = seasons
                 .Where(season => season.SeasonType?.Weeks != null) // only process seasons with weeks
@@ -51,6 +52,27 @@ namespace backend.Services
             await Task.WhenAll(tasks);
             return predictionData.OrderBy(pd => pd.SeasonYear);
         }
+
+        public async Task<IEnumerable<PredictionData>> GetPredictionDataForYear(int year)
+        {
+            var season = await _seasonService.GetSeasonByYearAsync(year);
+            var predictionData = new ConcurrentBag<PredictionData>();
+
+            Parallel.ForEach(
+                season.SeasonType.Weeks,
+                new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                week =>
+                {
+                    foreach (var e in week.Events ?? Enumerable.Empty<Event>())
+                    {
+                        var data = GetPredictionDataForEvent(e);
+                        predictionData.Add(data);
+                    }
+                });
+
+            return predictionData.OrderBy(pd => pd.WeekNumber);
+        }
+
 
         public PredictionData GetPredictionDataForEvent(Event game)
         {
@@ -93,6 +115,8 @@ namespace backend.Services
                 HomeWin = homeWin,
                 SeasonYear = game.Season,
                 WeekNumber = game.Week,
+                HomeTeamName = homeTeam.Team.Name,
+                AwayTeamName = awayTeam.Team.Name,
                 NuetralSite = competition.NuetralSite ? 1 : 0,
                 DivisionCompetition = competition.DivisionCompetition ? 1 : 0,
                 ConferenceCompetition = competition.ConferenceCompetition ? 1 : 0,
@@ -133,7 +157,7 @@ namespace backend.Services
                 AwayTeamAwayLosses = awayTeam.Team.Record.AwayLosses,
                 AwayConferenceWins = awayTeam.Team.Record.ConferenceWins,
                 AwayConferenceLosses = awayTeam.Team.Record.ConferenceLosses,
-                AwayTeamMlWins =  awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Wins ?? 0,
+                AwayTeamMlWins = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Wins ?? 0,
                 AwayTeamMlLosses = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Losses ?? 0,
                 AwayTeamSpreadWins = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Wins ?? 0,
                 AwayTeamSpreadLosses = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Losses ?? 0,
@@ -228,10 +252,29 @@ namespace backend.Services
         }
 
         private static decimal GetStatValue(IEnumerable<CategoryStat> stats, string name)
-        => stats?.FirstOrDefault(s => s.Name == name).Value ?? 0;
+        {
+            if (stats == null)
+                return 0;
 
-        private static decimal GetPredictorValue(IEnumerable<Statistic> compStats, string name)
-        => compStats?.FirstOrDefault(s => s.Name == name).Value ?? 0;
+            var stat = stats.FirstOrDefault(s => s.Name == name);
+            if (stat == null)
+                return 0;
+
+            return stat.Value;
+        }
+        
+
+        private static decimal GetPredictorValue(IEnumerable<Statistic> compStats, string name){
+            if (compStats == null)
+                return 0;
+
+            var compStat = compStats.FirstOrDefault(s => s.Name == name);
+            if (compStat == null)
+                return 0;
+
+            return compStat.Value;
+        }
+        
 
     }
 }

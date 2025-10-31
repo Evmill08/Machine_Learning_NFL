@@ -103,7 +103,7 @@ namespace backend.Services
         private async Task<Event> GetEventFromEventDto(EventDto response, int seasonNumber = 2025, int weekNumber = 1)
         {
             var competitions = new List<Competition>();
-            var semaphore = new SemaphoreSlim(5); 
+            var semaphore = new SemaphoreSlim(4); 
             var tasks = response.Competitions.Select(async comp =>
             {
                 await semaphore.WaitAsync();

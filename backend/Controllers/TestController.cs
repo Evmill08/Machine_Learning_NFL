@@ -16,7 +16,9 @@ namespace backend.Controllers
 
         public TestController(IEndpointTestService endpointTestService)
         {
+            Console.WriteLine("=== TestController constructor START ===");
             _endpointTestService = endpointTestService;
+            Console.WriteLine("=== TestController constructor END ===");
         }
 
         [HttpGet("seasons")]
@@ -36,7 +38,9 @@ namespace backend.Controllers
         [HttpGet("events")]
         public async Task<IActionResult> TestEvents()
         {
-            var response = await _endpointTestService.TestEventsEndpointAsync();
+            Console.WriteLine("=== TestEventData method START ===");
+            var response = await _endpointTestService.GetEventDataTestAsync();
+            Console.WriteLine("=== TestEventData method END ===");
             return Ok(response);
         }
 
