@@ -104,7 +104,7 @@ namespace backend.Services
                 Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/teams/14?lang=en&region=us"
             };
 
-            var teamResponse = await _teamService.GetTeamAsync(teamRef);
+            var teamResponse = await _teamService.GetTeamAsync(teamRef, 2025);
             return teamResponse;
         }
 

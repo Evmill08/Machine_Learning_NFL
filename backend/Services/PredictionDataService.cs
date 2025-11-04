@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using backend.enums;
 using backend.Models;
 
+// TODO: Fully optimize this service
 namespace backend.Services
 {
     public interface IPredictionDataService
@@ -15,10 +15,13 @@ namespace backend.Services
     public class PredictionDataService : IPredictionDataService
     {
         private readonly ISeasonService _seasonService;
+        private readonly ITeamService _teamService;
 
-        public PredictionDataService(ISeasonService seasonService)
+        public PredictionDataService(ISeasonService seasonService, ITeamService teamService)
         {
             _seasonService = seasonService;
+            _teamService = teamService;
+
         }
 
         public async Task<IEnumerable<PredictionData>> GetPredictionDataForTimeframe(int startYear, int endYear)
@@ -83,23 +86,28 @@ namespace backend.Services
             var homeOddsRecord = homeTeam.Team.OddsRecord?.OddsStats ?? Enumerable.Empty<OddsStat>();
             var awayOddsRecord = awayTeam.Team.OddsRecord?.OddsStats ?? Enumerable.Empty<OddsStat>();
 
-            var homePassingStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Passing).FirstOrDefault().CategoryStats;
-            var homeRushingStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Rushing).FirstOrDefault().CategoryStats;
-            var homeReceivingStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Receiving).FirstOrDefault().CategoryStats;
-            var homeKickingStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Kicking).FirstOrDefault().CategoryStats;
-            var homePuntingStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Punting).FirstOrDefault().CategoryStats;
-            var homeDefenseStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Defense).FirstOrDefault().CategoryStats;
-            var homeScoringStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Scoring).FirstOrDefault().CategoryStats;
-            var homeMiscStats = homeTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Misc).FirstOrDefault().CategoryStats;
+            // Use the cached categorized stats - MUCH FASTER!
+            var homeStats = _teamService.GetCategorizedStats(homeTeam.Team, game.Season);
+            var awayStats = _teamService.GetCategorizedStats(awayTeam.Team, game.Season);
 
-            var awayPassingStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Passing).FirstOrDefault().CategoryStats;
-            var awayRushingStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Rushing).FirstOrDefault().CategoryStats;
-            var awayReceivingStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Receiving).FirstOrDefault().CategoryStats;
-            var awayKickingStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Kicking).FirstOrDefault().CategoryStats;
-            var awayPuntingStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Punting).FirstOrDefault().CategoryStats;
-            var awayDefenseStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Defense).FirstOrDefault().CategoryStats;
-            var awayScoringStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Scoring).FirstOrDefault().CategoryStats;
-            var awayMiscStats = awayTeam.Team.Statistics.StatCategories.Where(sc => sc.Name == StatCategories.Misc).FirstOrDefault().CategoryStats;
+            // Now use O(1) dictionary lookups instead of repeated LINQ queries
+            var homePassingStats = homeStats.GetValueOrDefault(StatCategories.Passing);
+            var homeRushingStats = homeStats.GetValueOrDefault(StatCategories.Rushing);
+            var homeReceivingStats = homeStats.GetValueOrDefault(StatCategories.Receiving);
+            var homeKickingStats = homeStats.GetValueOrDefault(StatCategories.Kicking);
+            var homePuntingStats = homeStats.GetValueOrDefault(StatCategories.Punting);
+            var homeDefenseStats = homeStats.GetValueOrDefault(StatCategories.Defense);
+            var homeScoringStats = homeStats.GetValueOrDefault(StatCategories.Scoring);
+            var homeMiscStats = homeStats.GetValueOrDefault(StatCategories.Misc);
+
+            var awayPassingStats = awayStats.GetValueOrDefault(StatCategories.Passing);
+            var awayRushingStats = awayStats.GetValueOrDefault(StatCategories.Rushing);
+            var awayReceivingStats = awayStats.GetValueOrDefault(StatCategories.Receiving);
+            var awayKickingStats = awayStats.GetValueOrDefault(StatCategories.Kicking);
+            var awayPuntingStats = awayStats.GetValueOrDefault(StatCategories.Punting);
+            var awayDefenseStats = awayStats.GetValueOrDefault(StatCategories.Defense);
+            var awayScoringStats = awayStats.GetValueOrDefault(StatCategories.Scoring);
+            var awayMiscStats = awayStats.GetValueOrDefault(StatCategories.Misc);
 
             var homeCompPreds = competition.CompetitionPredictors.HomeTeamPredictors.Predictors;
             var awayCompPreds = competition.CompetitionPredictors.AwayTeamPredictors.Predictors;
@@ -262,9 +270,10 @@ namespace backend.Services
 
             return stat.Value;
         }
-        
 
-        private static decimal GetPredictorValue(IEnumerable<Statistic> compStats, string name){
+
+        private static decimal GetPredictorValue(IEnumerable<Statistic> compStats, string name)
+        {
             if (compStats == null)
                 return 0;
 
@@ -274,7 +283,7 @@ namespace backend.Services
 
             return compStat.Value;
         }
-        
+
 
     }
 }

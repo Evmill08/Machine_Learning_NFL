@@ -1,15 +1,17 @@
 using backend.Services;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure logging
 builder.Logging.ClearProviders().AddConsole().SetMinimumLevel(LogLevel.Debug);
 
-// Add services to the container.
+// Add services to the container
+builder.Services.AddMemoryCache();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
-// Add CORS before building the app
+// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -21,53 +23,58 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Register all HttpClient services before building the app
-builder.Services.AddHttpClient<IOddsService, OddsService>();
-builder.Services.AddHttpClient<IPredictorsService, PredictorsService>();
-builder.Services.AddHttpClient<IScoreService, ScoreService>();
-builder.Services.AddHttpClient<ITeamService, TeamService>();
+// Configure HttpClient with connection pooling and timeouts
+builder.Services.AddHttpClient("DefaultClient", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+    MaxConnectionsPerServer = 20, // Increase for parallel requests
+    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1)
+});
 
-// Register WeeksService first (no dependencies on Event/Season services)
-builder.Services.AddHttpClient<WeeksService>();
-builder.Services.AddScoped<IWeeksService, WeeksService>();
+// Register HttpClient services with optimized configuration
+builder.Services.AddHttpClient<IOddsService, OddsService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register EventService with its dependencies
-builder.Services.AddHttpClient<EventService>()
-    .AddTypedClient<IEventService>((client, sp) =>
-    {
-        var teamService = sp.GetRequiredService<ITeamService>();
-        var scoreService = sp.GetRequiredService<IScoreService>();
-        var oddsService = sp.GetRequiredService<IOddsService>();
-        var predictorsService = sp.GetRequiredService<IPredictorsService>();
-        var weeksService = sp.GetRequiredService<IWeeksService>();
+builder.Services.AddHttpClient<IPredictorsService, PredictorsService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-        return new EventService(client, teamService, scoreService, oddsService, predictorsService, weeksService);
-    });
+builder.Services.AddHttpClient<IScoreService, ScoreService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register SeasonService with its dependencies
-builder.Services.AddHttpClient<SeasonService>()
-    .AddTypedClient<ISeasonService>((client, sp) =>
-    {
-        var weeksService = sp.GetRequiredService<IWeeksService>();
-        return new SeasonService(client, weeksService);
-    });
+builder.Services.AddHttpClient<ITeamService, TeamService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
+// Register WeeksService
+builder.Services.AddHttpClient<IWeeksService, WeeksService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+
+// Register EventService with simplified DI
+builder.Services.AddHttpClient<IEventService, EventService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+
+// Register SeasonService with simplified DI
+builder.Services.AddHttpClient<ISeasonService, SeasonService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+
+// Register other services
 builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
 builder.Services.AddScoped<IPredictionDataService, PredictionDataService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
 
-// Build the app AFTER all service registrations
 var app = builder.Build();
 
-// Configure middleware
+// Configure middleware pipeline
 app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-if (!app.Environment.IsDevelopment())
+else
 {
     app.UseHttpsRedirection();
 }

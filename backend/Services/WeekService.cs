@@ -2,8 +2,7 @@ using backend.Utilities;
 using backend.DTOs;
 using backend.Models;
 
-// TODO:
-// Again, we need to think about the transferring from weekDto to Week Model
+// TODO: Optimize this service
 namespace backend.Services
 {
     public interface IWeeksService

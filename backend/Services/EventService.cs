@@ -1,8 +1,8 @@
 using backend.Models;
 using backend.DTOs;
 using backend.Utilities;
+using DocumentFormat.OpenXml.ExtendedProperties;
 
-// TODO: Change eventDto to Events when more details are configured
 namespace backend.Services
 {
     public interface IEventService
@@ -48,27 +48,28 @@ namespace backend.Services
                 ?? throw new Exception($"Error fetching events response for week {weekNumber} of the {seasonYear} season");
 
             // This is a really stupid way of doing this, but I'm not sure how to get the data from the eventResponseDto to the event in any other way since we aren't storing any of this data.
-            return (response, response.EventMetadata.EventParametersDto.SeasonString.FirstOrDefault(), response.EventMetadata.EventParametersDto.WeekString.FirstOrDefault());
+            return (
+
+                Response: response,
+                Season: response.EventMetadata.EventParametersDto.SeasonString.FirstOrDefault(),
+                Week: response.EventMetadata.EventParametersDto.WeekString.FirstOrDefault()
+            );
         }
 
         // TODO: Look into changing this?? I think we call get event response when we already have a response?? We could pass this in from the higher level method??
         public async Task<IEnumerable<Event>> GetEventsByWeek(int seasonYear, int weekNumber)
         {
-            var eventResponse = await GetEventsResponseAsync(seasonYear, weekNumber);
-            var eventRefs = eventResponse.Item1;
-            var season = eventResponse.Item2;
-            var week = eventResponse.Item3;
+            var (response, season, week) = await GetEventsResponseAsync(seasonYear, weekNumber);
 
-            var eventList = new List<Event>();
-
-            // TODO: Again, there is a lot of data we need to fetch from refs here before we can actually use this
-            foreach (var eventRef in eventRefs.EventRefs)
+            var eventTasks = response.EventRefs.Select(async eventRef =>
             {
                 var response = await _httpClient.GetFromJsonResilientAsync<EventDto>(eventRef.Ref)
-                    ?? throw new Exception("Error fetching event");
+                    ?? throw new Exception("Error fecthing event");
 
-                eventList.Add(await GetEventFromEventDto(response));
-            }
+                return await GetEventFromEventDto(response, Convert.ToInt32(season), Convert.ToInt32(week));
+            });
+
+            var eventList = await Task.WhenAll(eventTasks);
             return eventList;
         }
 
@@ -80,8 +81,15 @@ namespace backend.Services
             int weekNumber = Convert.ToInt32(eventResposne.EventMetadata.EventParametersDto.WeekString.FirstOrDefault());
             int seasonNumber = Convert.ToInt32(eventResposne.EventMetadata.EventParametersDto.SeasonString.FirstOrDefault());
 
-            var eventList = await GetEventsByWeek(seasonNumber, weekNumber);
-            return eventList;
+            var eventTasks = eventResposne.EventRefs.Select(async eventRef =>
+            {
+                var response = await _httpClient.GetFromJsonResilientAsync<EventDto>(eventRef.Ref)
+                    ?? throw new Exception("Error fetching event");
+
+                return await GetEventFromEventDto(response, seasonNumber, weekNumber);
+            });
+
+            return await Task.WhenAll(eventTasks);
         }
 
         public async Task<Event> GetEventByRefAsync(RefDto eventRef)
@@ -100,48 +108,50 @@ namespace backend.Services
             return events;
         }
 
+        // Change this bs
         private async Task<Event> GetEventFromEventDto(EventDto response, int seasonNumber = 2025, int weekNumber = 1)
         {
-            var competitions = new List<Competition>();
-            var semaphore = new SemaphoreSlim(4); 
-            var tasks = response.Competitions.Select(async comp =>
+            var competitionTasks = response.Competitions.Select(async comp =>
             {
-                await semaphore.WaitAsync();
-                try
+                var competitorTasks = comp.Competitors.Select(async c =>
                 {
-                    var competitors = await Task.WhenAll(comp.Competitors.Select(async c =>
-                    {
-                        return new Competitor
-                        {
-                            Id = c.Id,
-                            HomeAway = c.HomeAway,
-                            Winner = c.Winner,
-                            Team = await _teamService.GetTeamAsync(c.TeamRef),
-                            CompetitorScore = await _scoreService.GetTeamScoreAsync(c.ScoreRef)
-                        };
-                    }));
+                    var teamTask = _teamService.GetTeamAsync(c.TeamRef, seasonNumber);
+                    var scoreTask = _scoreService.GetTeamScoreAsync(c.ScoreRef);
 
-                    return new Competition
+                    await Task.WhenAll(teamTask, scoreTask);
+
+                    return new Competitor
                     {
-                        Id = comp.Id,
-                        Date = DateTime.Parse(comp.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
-                        TimeValid = comp.TimeValid,
-                        DateValid = comp.DateValid,
-                        NuetralSite = comp.NuetralSite,
-                        DivisionCompetition = comp.DivisionCompetition,
-                        ConferenceCompetition = comp.ConferenceCompetition,
-                        Competitors = competitors.ToList(),
-                        CompetitionOdds = await _oddsService.GetOddsAsync(comp.OddsRef),
-                        CompetitionPredictors = await _predictorService.GetPredictionsAsync(comp.PredictorRef)
+                        Id = c.Id,
+                        HomeAway = c.HomeAway,
+                        Winner = c.Winner,
+                        Team = await teamTask,
+                        CompetitorScore = await scoreTask
                     };
-                }
-                finally
+                });
+
+                var competitorsTask = Task.WhenAll(competitorTasks);
+                var oddsTask = _oddsService.GetOddsAsync(comp.OddsRef);
+                var predictorsTask = _predictorService.GetPredictionsAsync(comp.PredictorRef);
+
+                await Task.WhenAll(competitorsTask, oddsTask, predictorsTask);
+
+                return new Competition
                 {
-                    semaphore.Release();
-                }
+                    Id = comp.Id,
+                    Date = DateTime.Parse(comp.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                    TimeValid = comp.TimeValid,
+                    DateValid = comp.DateValid,
+                    NuetralSite = comp.NuetralSite,
+                    DivisionCompetition = comp.DivisionCompetition,
+                    ConferenceCompetition = comp.ConferenceCompetition,
+                    Competitors = (await competitorsTask).ToList(),
+                    CompetitionOdds = await oddsTask,
+                    CompetitionPredictors = await predictorsTask,
+                };
             });
 
-            competitions.AddRange(await Task.WhenAll(tasks));
+            var competitions = await Task.WhenAll(competitionTasks);
 
             return new Event
             {
@@ -149,11 +159,13 @@ namespace backend.Services
                 Date = DateTime.Parse(response.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 Name = response.Name,
                 TimeValid = response.TimeValid,
-                Competitions = competitions,
+                Competitions = competitions.ToList(),
                 Season = seasonNumber,
                 Week = weekNumber
             };
         }
-
     }
 } 
+
+
+

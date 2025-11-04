@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -76,7 +77,13 @@ namespace backend.Controllers
         [HttpGet("allPredictionData")]
         public async Task<IActionResult> TestPredictionData()
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var response = await _endpointTestService.GetPredictionDataAsync();
+            stopwatch.Stop();
+            var elapsed = stopwatch.Elapsed;
+            Console.WriteLine($"Elapsed time: {elapsed.TotalSeconds} seconds");
+            Console.WriteLine($"Elapsed Time: {elapsed.TotalMinutes} minutes");
             return Ok(response);
         }
     }
