@@ -108,7 +108,6 @@ namespace backend.Services
             return events;
         }
 
-        // Change this bs
         private async Task<Event> GetEventFromEventDto(EventDto response, int seasonNumber = 2025, int weekNumber = 1)
         {
             var competitionTasks = response.Competitions.Select(async comp =>

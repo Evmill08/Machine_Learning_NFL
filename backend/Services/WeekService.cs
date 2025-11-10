@@ -7,10 +7,8 @@ namespace backend.Services
 {
     public interface IWeeksService
     {
-        public Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear);
-
+        public Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default);
         public Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
-
         public Task<Week> GetWeekByRefAsync(RefDto weekRef);
         public Task<int> GetWeekNumberAsync();
     }
@@ -26,30 +24,35 @@ namespace backend.Services
             _serviceProvider = serviceProvider;
         }
 
-        public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear)
+        public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default)
         {
             var topLevelUrl = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks?lang=en&region=us";
 
             var weekResponse = await _httpClient.GetFromJsonResilientAsync<WeeksResponseDto>(topLevelUrl)
                 ?? throw new Exception($"Error fetching weeks for {seasonYear}");
 
-            var weeks = new List<Week>();
+            var maxConcurrency = Environment.ProcessorCount;
+            var throttler = new SemaphoreSlim(maxConcurrency);
 
-            using var semaphore = new SemaphoreSlim(4);
-
-            var tasks = weekResponse.WeekRefs.Select(async weekRef =>
+            var weekTasks = weekResponse.WeekRefs.Select(async weekRef =>
             {
-                await semaphore.WaitAsync();
+                await throttler.WaitAsync(cancellationToken).ConfigureAwait(false);
                 try
                 {
-                    var week = await GetWeekByRefAsync(weekRef);
-                    lock (weeks) weeks.Add(week);
+                    return await GetWeekByRefAsync(weekRef).ConfigureAwait(false);
                 }
-                finally { semaphore.Release(); }
+                finally
+                {
+                    throttler.Release();
+                }
             });
 
-            await Task.WhenAll(tasks);
-            return weeks.OrderBy(w => w.WeekNumber);
+            var weeks = await Task.WhenAll(weekTasks).ConfigureAwait(false);
+
+            return weeks
+                .Where(w => w != null)
+                .OrderBy(w => w.WeekNumber)
+                .ToArray();
         }
 
         public async Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)

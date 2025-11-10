@@ -33,27 +33,29 @@ namespace backend.Services
                 };
             }
 
+            // TODO: Think a little bit more about this
+            // It is optimal for predictions to have the minimized spread and total to have the best odds to beat vegas.
             var oddsResponse = await _httpclient.GetFromJsonResilientAsync<OddsResponseDto>(oddsRef.Ref)
                 ?? throw new Exception("Error fetchings odds response");
 
             // Can probably clean this up a bit, but since 2025 games don't have odds data for future weeks, we can get divide by 0 errors 
-            var averageTotal = (oddsResponse.Odds.Sum(x => x.OverUnder) == 0 || oddsResponse.Odds.Count == 0)
+            var minimizedTotal = (oddsResponse.Odds.Sum(x => x.OverUnder) == 0 || oddsResponse.Odds.Count == 0)
                 ? 0
-                : oddsResponse.Odds.Sum(x => x.OverUnder) / oddsResponse.Odds.Count;
+                : oddsResponse.Odds.Min(x => x.OverUnder);
 
-            var averageSpread = (oddsResponse.Odds.Sum(x => x.Spread) == 0 || oddsResponse.Odds.Count == 0)
+            var minimizedSpread = (oddsResponse.Odds.Sum(x => x.Spread) == 0 || oddsResponse.Odds.Count == 0)
                 ? 0
-                : oddsResponse.Odds.Sum(x => x.Spread) / oddsResponse.Odds.Count;
+                : oddsResponse.Odds.Min(x => x.Spread);
 
-            var MlWinner = ( oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).MoneyLineWinner;
-            var AtsWinner = ( oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).SpreadWinner;
+            var MlWinner = (oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).MoneyLineWinner;
+            var AtsWinner = (oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).SpreadWinner;
 
             // TODO: This is not how we want to handle this data. Need to think about this more
             return new Odds
             {
                 Details = "",
-                AverageOverUnder = averageTotal,
-                AverageSpread = averageSpread,
+                AverageOverUnder = minimizedTotal, // if mins are what we go with, change model names
+                AverageSpread = minimizedSpread,
                 MoneyLineWinner = MlWinner,
                 SpreadWinner = AtsWinner,
             };

@@ -1,3 +1,5 @@
+using System.Net.NetworkInformation;
+
 namespace backend.Models
 {
     public class Competition

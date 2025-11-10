@@ -17,7 +17,7 @@ namespace backend.Controllers
         [HttpGet("range")]
         public async Task<IActionResult> GetPredictionDataForRange()
         {
-            await _excelService.ExportRangeDataToExcelAsync(2020, 2024);
+            await _excelService.ExportRangeDataToExcelAsync(2018, 2024);
             return Ok("NFL_Predictions created");
         }
 

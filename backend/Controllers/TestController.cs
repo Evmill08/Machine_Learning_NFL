@@ -1,11 +1,6 @@
 using System.Diagnostics;
-using System.Drawing;
-using System.Runtime.Serialization;
-using System.Text.Json;
-using backend.Models;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace backend.Controllers
 {
@@ -17,9 +12,7 @@ namespace backend.Controllers
 
         public TestController(IEndpointTestService endpointTestService)
         {
-            Console.WriteLine("=== TestController constructor START ===");
             _endpointTestService = endpointTestService;
-            Console.WriteLine("=== TestController constructor END ===");
         }
 
         [HttpGet("seasons")]

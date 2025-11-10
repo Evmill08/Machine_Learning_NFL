@@ -60,10 +60,13 @@ builder.Services.AddHttpClient<IEventService, EventService>()
 builder.Services.AddHttpClient<ISeasonService, SeasonService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
+
+
 // Register other services
 builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
 builder.Services.AddScoped<IPredictionDataService, PredictionDataService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
+builder.Services.AddScoped<IPredictionService, PredictionService>();
 
 var app = builder.Build();
 

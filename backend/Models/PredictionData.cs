@@ -14,9 +14,6 @@ namespace backend.Models
         public int WeekNumber { get; set; }
         public string HomeTeamName { get; set; }
         public string AwayTeamName { get; set; }
-        public int NuetralSite { get; set; } // 1 if true 
-        public int DivisionCompetition { get; set; } // 1 if true
-        public int ConferenceCompetition { get; set; } // 1 if true
         public int HomeWinner { get; set; } // 1 if true
         public int HomeWins { get; set; }
         public int HomeLosses { get; set; }
@@ -33,10 +30,6 @@ namespace backend.Models
         public int HomeTeamAwayLosses { get; set; }
         public int HomeConferenceWins { get; set; }
         public int HomeConferenceLosses { get; set; }
-        public int HomeTeamMlWins { get; set; }//need 
-        public int HomeTeamMlLosses { get; set; }//need 
-        public int HomeTeamSpreadWins { get; set; }//need 
-        public int HomeTeamSpreadLosses { get; set; } //need 
         public int HomeInjuryCount { get; set; }
         public int AwayWinner { get; set; } // 1 if true
         public int AwayWins { get; set; }
@@ -48,21 +41,15 @@ namespace backend.Models
         public decimal AwayWinPercent { get; set; }
         public int AwayDivisionWins { get; set; }
         public int AwayDivisionLosses { get; set; }
-        public int AwayTeamHomeWins { get; set; }
-        public int AwayTeamHomeLosses { get; set; }
-        public int AwayTeamAwayWins { get; set; }
-        public int AwayTeamAwayLosses { get; set; }
         public int AwayConferenceWins { get; set; }
-        public int AwayConferenceLosses { get; set; }
-        public int AwayTeamMlWins { get; set; }
-        public int AwayTeamMlLosses { get; set; }
-        public int AwayTeamSpreadWins { get; set; }
-        public int AwayTeamSpreadLosses { get; set; }
+        public int AwayConferenceLosses { get; set; }            
+        public int AwayTeamHomeWins {get; set;}
+        public int AwayTeamHomeLosses {get; set;}
+        public int AwayTeamAwayWins {get; set;}
+        public int AwayTeamAwayLosses {get; set;}
         public int AwayInjuryCount { get; set; }
         public decimal AveragePredictedTotal { get; set; }
         public decimal AveragePredictedSpread { get; set; }
-        public int MoneyLineWinner { get; set; } // 1 if true
-        public int SpreadWinner { get; set; } // 1 if true
         public decimal PredictedHomeWinPercent { get; set; }
         public decimal PredicitedHomeMatchupQuality { get; set; }
         public decimal PredictedHomeLossPercent { get; set; }
@@ -72,7 +59,6 @@ namespace backend.Models
         public decimal PredictedHomePointDifferential { get; set; }
         public decimal PredictedAwayWinPercent { get; set; }
         public decimal PredicitedAwayMatchupQuality { get; set; }
-        public decimal PredictedAwayOpponentStrenth { get; set; }
         public decimal PredictedAwayLossPercent { get; set; }
         public decimal PredictedAwayPointDifferential { get; set; }
         public decimal PredictedAwayDefenseEfficiency { get; set; }
@@ -146,6 +132,5 @@ namespace backend.Models
         public decimal AwayThirdDownConversionPercent { get; set; }
         public decimal AwayRedZoneEfficiencyPercent { get; set; }
         public decimal AwayTurnoverDifferential { get; set; }
-
     }
 }

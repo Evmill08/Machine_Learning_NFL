@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using backend.enums;
 using backend.Models;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 // TODO: Fully optimize this service
 namespace backend.Services
@@ -16,44 +17,37 @@ namespace backend.Services
     {
         private readonly ISeasonService _seasonService;
         private readonly ITeamService _teamService;
+        private readonly int _maxDegreesOfParallelism;
 
         public PredictionDataService(ISeasonService seasonService, ITeamService teamService)
         {
             _seasonService = seasonService;
             _teamService = teamService;
-
+            _maxDegreesOfParallelism = Math.Max(1, Environment.ProcessorCount);
         }
 
         public async Task<IEnumerable<PredictionData>> GetPredictionDataForTimeframe(int startYear, int endYear)
         {
             var seasons = await _seasonService.GetSeasonsRangedAsync(startYear, endYear);
 
+            var allEvents = seasons
+                .Where(s => s.SeasonType?.Weeks != null)
+                .SelectMany(s => s.SeasonType!.Weeks!)
+                .SelectMany(w => w.Events ?? Enumerable.Empty<Event>())
+                .ToList();
+
             var predictionData = new ConcurrentBag<PredictionData>();
-            using var semaphore = new SemaphoreSlim(4); // global cap for total work
 
-            var tasks = seasons
-                .Where(season => season.SeasonType?.Weeks != null) // only process seasons with weeks
-                .SelectMany(season =>
-                    season.SeasonType!.Weeks!.Select(async week =>
-                    {
-                        await semaphore.WaitAsync();
-                        try
-                        {
-                            foreach (var e in week.Events ?? Enumerable.Empty<Event>())
-                            {
-                                var data = GetPredictionDataForEvent(e);
-                                predictionData.Add(data);
-                            }
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
-                    })
-                );
+            var options = new ParallelOptions { MaxDegreeOfParallelism = _maxDegreesOfParallelism };
 
-            await Task.WhenAll(tasks);
-            return predictionData.OrderBy(pd => pd.SeasonYear);
+            await Parallel.ForEachAsync(allEvents, options, (game, ct) =>
+            {
+                var data = GetPredictionDataForEvent(game);
+                predictionData.Add(data);
+                return ValueTask.CompletedTask;
+            });
+
+            return predictionData.OrderBy(pd => pd.SeasonYear).ThenBy(pd => pd.WeekNumber).ToList();
         }
 
         public async Task<IEnumerable<PredictionData>> GetPredictionDataForYear(int year)
@@ -61,9 +55,11 @@ namespace backend.Services
             var season = await _seasonService.GetSeasonByYearAsync(year);
             var predictionData = new ConcurrentBag<PredictionData>();
 
+            var weeks = season.SeasonType.Weeks;
+
             Parallel.ForEach(
-                season.SeasonType.Weeks,
-                new ParallelOptions { MaxDegreeOfParallelism = 4 },
+                weeks,
+                new ParallelOptions { MaxDegreeOfParallelism = _maxDegreesOfParallelism },
                 week =>
                 {
                     foreach (var e in week.Events ?? Enumerable.Empty<Event>())
@@ -73,15 +69,15 @@ namespace backend.Services
                     }
                 });
 
-            return predictionData.OrderBy(pd => pd.WeekNumber);
+            return predictionData.OrderBy(pd => pd.WeekNumber).ToList();
         }
 
 
         public PredictionData GetPredictionDataForEvent(Event game)
         {
             var competition = game.Competitions.FirstOrDefault();
-            var homeTeam = competition.Competitors.Where(team => team.HomeAway == "home").FirstOrDefault();
-            var awayTeam = competition.Competitors.Where(team => team.HomeAway == "away").FirstOrDefault();
+            var homeTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "home");
+            var awayTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "away");
 
             var homeOddsRecord = homeTeam.Team.OddsRecord?.OddsStats ?? Enumerable.Empty<OddsStat>();
             var awayOddsRecord = awayTeam.Team.OddsRecord?.OddsStats ?? Enumerable.Empty<OddsStat>();
@@ -125,9 +121,6 @@ namespace backend.Services
                 WeekNumber = game.Week,
                 HomeTeamName = homeTeam.Team.Name,
                 AwayTeamName = awayTeam.Team.Name,
-                NuetralSite = competition.NuetralSite ? 1 : 0,
-                DivisionCompetition = competition.DivisionCompetition ? 1 : 0,
-                ConferenceCompetition = competition.ConferenceCompetition ? 1 : 0,
                 HomeWinner = homeTeam.Winner ? 1 : 0,
                 HomeWins = homeTeam.Team.Record.Wins,
                 HomeLosses = homeTeam.Team.Record.Losses,
@@ -144,10 +137,6 @@ namespace backend.Services
                 HomeTeamAwayLosses = homeTeam.Team.Record.AwayLosses,
                 HomeConferenceWins = homeTeam.Team.Record.ConferenceWins,
                 HomeConferenceLosses = homeTeam.Team.Record.ConferenceLosses,
-                HomeTeamMlWins = homeOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Wins ?? 0,
-                HomeTeamMlLosses = homeOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Losses ?? 0,
-                HomeTeamSpreadWins = homeOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Wins ?? 0,
-                HomeTeamSpreadLosses = homeOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Losses ?? 0,
                 HomeInjuryCount = homeTeam.Team.Injuries.InjuryCount,
                 AwayWinner = awayTeam.Winner ? 1 : 0,
                 AwayWins = awayTeam.Team.Record.Wins,
@@ -165,15 +154,9 @@ namespace backend.Services
                 AwayTeamAwayLosses = awayTeam.Team.Record.AwayLosses,
                 AwayConferenceWins = awayTeam.Team.Record.ConferenceWins,
                 AwayConferenceLosses = awayTeam.Team.Record.ConferenceLosses,
-                AwayTeamMlWins = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Wins ?? 0,
-                AwayTeamMlLosses = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.Moneyline)?.Losses ?? 0,
-                AwayTeamSpreadWins = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Wins ?? 0,
-                AwayTeamSpreadLosses = awayOddsRecord.FirstOrDefault(o => o.OddsRecord == OddsRecords.SpreadOverall)?.Losses ?? 0,
                 AwayInjuryCount = awayTeam.Team.Injuries.InjuryCount,
                 AveragePredictedTotal = competition.CompetitionOdds.AverageOverUnder,
                 AveragePredictedSpread = competition.CompetitionOdds.AverageSpread,
-                MoneyLineWinner = competition.CompetitionOdds.MoneyLineWinner ? 1 : 0,
-                SpreadWinner = competition.CompetitionOdds.SpreadWinner ? 1 : 0,
                 PredictedHomeWinPercent = GetPredictorValue(homeCompPreds, CompetitionPredictors.WinPercent),
                 PredicitedHomeMatchupQuality = GetPredictorValue(homeCompPreds, CompetitionPredictors.MatchupQuality),
                 PredictedHomeLossPercent = GetPredictorValue(homeCompPreds, CompetitionPredictors.LossPercent),
@@ -206,7 +189,6 @@ namespace backend.Services
                 HomeAverageStuffYards = GetStatValue(homeDefenseStats, Defense.AverageStuffYards),
                 HomeDefensiveTouchdowns = GetStatValue(homeDefenseStats, Defense.DefensiveTouchdowns),
                 HomeSacks = GetStatValue(homeDefenseStats, Defense.Sacks),
-                HomeYardsAllowed = GetStatValue(homeDefenseStats, Defense.YardsAllowed),
                 HomeExtraPointPercentage = GetStatValue(homeKickingStats, Kicking.ExtraPointPercentage),
                 HomeFieldGoalPercent = GetStatValue(homeKickingStats, Kicking.FieldGoalPercent),
                 HomeFieldGoalsMade = GetStatValue(homeKickingStats, Kicking.FieldGoalsMade),
@@ -240,7 +222,6 @@ namespace backend.Services
                 AwayAverageStuffYards = GetStatValue(awayDefenseStats, Defense.AverageStuffYards),
                 AwayDefensiveTouchdowns = GetStatValue(awayDefenseStats, Defense.DefensiveTouchdowns),
                 AwaySacks = GetStatValue(awayDefenseStats, Defense.Sacks),
-                AwayYardsAllowed = GetStatValue(awayDefenseStats, Defense.YardsAllowed),
                 AwayExtraPointPercentage = GetStatValue(awayKickingStats, Kicking.ExtraPointPercentage),
                 AwayFieldGoalPercent = GetStatValue(awayKickingStats, Kicking.FieldGoalPercent),
                 AwayFieldGoalsMade = GetStatValue(awayKickingStats, Kicking.FieldGoalsMade),
