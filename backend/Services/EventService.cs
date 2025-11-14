@@ -2,6 +2,9 @@ using backend.Models;
 using backend.DTOs;
 using backend.Utilities;
 using DocumentFormat.OpenXml.ExtendedProperties;
+using DocumentFormat.OpenXml.Drawing;
+using System.Runtime.CompilerServices;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace backend.Services
 {
@@ -11,6 +14,7 @@ namespace backend.Services
         public Task<IEnumerable<Event>> GetEventsByRefAsync(RefDto eventsRef);
         public Task<Event> GetEventByRefAsync(RefDto eventRef);
         public Task<IEnumerable<Event>> GetEventsForCurrentWeek(int seasonYear);
+        public Task<Event> GetEventByIdAsync(int eventID);
     }
 
     public class EventService : IEventService
@@ -21,7 +25,7 @@ namespace backend.Services
         private readonly IOddsService _oddsService;
         private readonly IPredictorsService _predictorService;
         private readonly IWeeksService _weeksService;
-
+        private readonly IWeatherService _weatherService;
         private readonly int Year = DateTime.Now.Year;
 
         public EventService(
@@ -30,7 +34,8 @@ namespace backend.Services
             IScoreService scoreService,
             IOddsService oddsService,
             IPredictorsService predictorsService,
-            IWeeksService weeksService)
+            IWeeksService weeksService,
+            IWeatherService weatherService)
         {
             _httpClient = httpClient;
             _teamService = teamService;
@@ -38,6 +43,7 @@ namespace backend.Services
             _oddsService = oddsService;
             _predictorService = predictorsService;
             _weeksService = weeksService;
+            _weatherService = weatherService;
         }
 
         private async Task<(EventsResponseDto, string, string)> GetEventsResponseAsync(int seasonYear, int weekNumber)
@@ -110,6 +116,10 @@ namespace backend.Services
 
         private async Task<Event> GetEventFromEventDto(EventDto response, int seasonNumber = 2025, int weekNumber = 1)
         {
+            if (response.Competitions == null)
+            {
+                Console.WriteLine("What");
+            }
             var competitionTasks = response.Competitions.Select(async comp =>
             {
                 var competitorTasks = comp.Competitors.Select(async c =>
@@ -129,23 +139,35 @@ namespace backend.Services
                     };
                 });
 
+                var date = DateTime.Parse(comp.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+
                 var competitorsTask = Task.WhenAll(competitorTasks);
                 var oddsTask = _oddsService.GetOddsAsync(comp.OddsRef);
                 var predictorsTask = _predictorService.GetPredictionsAsync(comp.PredictorRef);
+                var weatherTask = _weatherService.GetWeatherForCompetitionAsync(comp.Venue.AddressDto.City, comp.Venue.AddressDto.Country, date);
 
-                await Task.WhenAll(competitorsTask, oddsTask, predictorsTask);
+                await Task.WhenAll(competitorsTask, oddsTask, predictorsTask, weatherTask);
 
                 return new Competition
                 {
                     Id = comp.Id,
-                    Date = DateTime.Parse(comp.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+                    Date = date,
                     TimeValid = comp.TimeValid,
                     DateValid = comp.DateValid,
-                    NuetralSite = comp.NuetralSite,
-                    DivisionCompetition = comp.DivisionCompetition,
-                    ConferenceCompetition = comp.ConferenceCompetition,
+                    Venue = new Venue
+                    {
+                        StadiumName = comp.Venue.StadiumName,
+                        City = comp.Venue.AddressDto.City,
+                        State = comp.Venue.AddressDto.State,
+                        ZipCode = comp.Venue.AddressDto.zipCode,
+                        Country = comp.Venue.AddressDto.Country,
+                        Grass = comp.Venue.Grass,
+                        Indoors = comp.Venue.Indoors,
+                        OutOfUSA = comp.Venue.AddressDto.Country != "USA"
+                    },
+                    Weather = await weatherTask,
                     Competitors = (await competitorsTask).ToList(),
-                    CompetitionOdds = await oddsTask,
+                    CompetitionOdds = (await oddsTask).ToList(),
                     CompetitionPredictors = await predictorsTask,
                 };
             });
@@ -162,6 +184,16 @@ namespace backend.Services
                 Season = seasonNumber,
                 Week = weekNumber
             };
+        }
+
+        public async Task<Event> GetEventByIdAsync(int eventID)
+        {
+            var eventRef = new RefDto
+            {
+                Ref = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/{eventID}?lang=en&region=us"
+            };
+
+            return await GetEventByRefAsync(eventRef);
         }
     }
 } 

@@ -10,7 +10,7 @@ namespace backend.Services
         public Task<Season?> TestSeasonEndpointAysnc();
         public Task<IEnumerable<Week?>> TestWeekEndpointAsync();
         public Task<IEnumerable<Event?>> TestEventsEndpointAsync();
-        public Task<Odds?> TestOddsEndpointAsync();
+        public Task<IEnumerable<Odds>?> TestOddsEndpointAsync();
         public Task<Event?> GetEventDataTestAsync();
         public Task<Team?> GetTeamDataTestAsync();
         public Task<PredictionData> GetPredictionDataForEventTestAsync();
@@ -75,7 +75,7 @@ namespace backend.Services
             return eventResponse;
         }
 
-        public async Task<Odds?> TestOddsEndpointAsync()
+        public async Task<IEnumerable<Odds>?> TestOddsEndpointAsync()
         {
             var oddsRef = new RefDto
             {
@@ -83,7 +83,14 @@ namespace backend.Services
             };
 
             var oddsResponse = await _oddsService.GetOddsAsync(oddsRef);
-            return oddsResponse;
+
+            return oddsResponse.Select(o => new Odds
+            {
+                Details = o.Details,
+                OverUnder = o.OverUnder,
+                Spread = o.Spread,
+                Provider = o.Provider,
+            }).ToList();
         }
 
         public async Task<Event?> GetEventDataTestAsync()
@@ -111,7 +118,8 @@ namespace backend.Services
         public async Task<PredictionData> GetPredictionDataForEventTestAsync()
         {
             var e = await GetEventDataTestAsync();
-            return _predictionDataService.GetPredictionDataForEvent(e);
+            var predictionData = await _predictionDataService.GetPredictionDataForEvent(e);
+            return predictionData;
         }
 
         public async Task<IEnumerable<PredictionData>> GetPredictionDataAsync()

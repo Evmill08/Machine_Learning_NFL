@@ -16,12 +16,12 @@ namespace backend.Services
     public class WeeksService : IWeeksService
     {
         private readonly HttpClient _httpClient;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly Lazy<IEventService> _eventServiceLazy;
 
-        public WeeksService(HttpClient httpClient, IServiceProvider serviceProvider)
+        public WeeksService(HttpClient httpClient, Lazy<IEventService> eventServiceLazy)
         {
             _httpClient = httpClient;
-            _serviceProvider = serviceProvider;
+            _eventServiceLazy = eventServiceLazy;
         }
 
         public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default)
@@ -63,8 +63,7 @@ namespace backend.Services
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
 
             // Resolve IEventService lazily only when needed
-            var eventService = _serviceProvider.GetRequiredService<IEventService>();
-            var events = await eventService.GetEventsByRefAsync(response.EventRefs);
+            var events = await _eventServiceLazy.Value.GetEventsByRefAsync(response.EventRefs);
 
             return new Week
             {
@@ -81,8 +80,7 @@ namespace backend.Services
                 ?? throw new Exception("Error fecthing week by week reference");
 
             // Resolve IEventService lazily only when needed
-            var eventService = _serviceProvider.GetRequiredService<IEventService>();
-            var events = await eventService.GetEventsByRefAsync(weekResponse.EventRefs);
+            var events = await _eventServiceLazy.Value.GetEventsByRefAsync(weekResponse.EventRefs);
 
             return new Week
             {

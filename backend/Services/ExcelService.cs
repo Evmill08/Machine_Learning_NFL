@@ -103,7 +103,7 @@ namespace backend.Services
 
             foreach (var e in currentGames)
             {
-                var prediction = _predictionDataService.GetPredictionDataForEvent(e);
+                var prediction = await _predictionDataService.GetPredictionDataForEvent(e);
                 predictions.Add(prediction);
             }
 

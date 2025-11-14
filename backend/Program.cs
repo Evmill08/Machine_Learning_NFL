@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Configure HttpClient with connection pooling and timeouts
+// Configure a default HttpClient configuration for reuse (optional)
 builder.Services.AddHttpClient("DefaultClient", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
@@ -31,13 +31,12 @@ builder.Services.AddHttpClient("DefaultClient", client =>
 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
 {
     PooledConnectionLifetime = TimeSpan.FromMinutes(2),
-    MaxConnectionsPerServer = 20, // Increase for parallel requests
+    MaxConnectionsPerServer = 20,
     PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1)
 });
 
-// Register HttpClient services with optimized configuration
-builder.Services.AddHttpClient<IOddsService, OddsService>()
-    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+// Register services that require HttpClient using AddHttpClient<TInterface, TImplementation>()
+// This ensures HttpClient is injected into their constructors.
 
 builder.Services.AddHttpClient<IPredictorsService, PredictorsService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
@@ -48,25 +47,34 @@ builder.Services.AddHttpClient<IScoreService, ScoreService>()
 builder.Services.AddHttpClient<ITeamService, TeamService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register WeeksService
 builder.Services.AddHttpClient<IWeeksService, WeeksService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register EventService with simplified DI
 builder.Services.AddHttpClient<IEventService, EventService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register SeasonService with simplified DI
 builder.Services.AddHttpClient<ISeasonService, SeasonService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
+// OddsService needs HttpClient + IEventService - register as HttpClient factory as well
+builder.Services.AddHttpClient<IOddsService, OddsService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
+// PredictionService needs HttpClient + several other services
+builder.Services.AddHttpClient<IPredictionService, PredictionService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
-// Register other services
+builder.Services.AddHttpClient<IWeatherService, WeatherService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+
+// Register the remaining services that do NOT need HttpClient (regular DI)
 builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
 builder.Services.AddScoped<IPredictionDataService, PredictionDataService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
-builder.Services.AddScoped<IPredictionService, PredictionService>();
+builder.Services.AddScoped<IGameDataService, GameDataService>();
+
+builder.Services.AddScoped<Lazy<IEventService>>(provider => 
+    new Lazy<IEventService>(() => provider.GetRequiredService<IEventService>()));
 
 var app = builder.Build();
 
@@ -84,5 +92,14 @@ else
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");
+
+var endpoints = app.Services.GetRequiredService<Microsoft.AspNetCore.Routing.EndpointDataSource>();
+foreach (var endpoint in endpoints.Endpoints)
+{
+    if (endpoint is Microsoft.AspNetCore.Routing.RouteEndpoint routeEndpoint)
+    {
+        Console.WriteLine($"Route: {routeEndpoint.RoutePattern.RawText}");
+    }
+}
 
 app.Run();

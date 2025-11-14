@@ -1,4 +1,4 @@
-using System.Net.NetworkInformation;
+using backend.DTOs;
 
 namespace backend.Models
 {
@@ -8,12 +8,35 @@ namespace backend.Models
         public DateTime Date { get; set; }
         public bool TimeValid { get; set; }
         public bool DateValid { get; set; }
-        public bool NuetralSite { get; set; }
-        public bool DivisionCompetition { get; set; }
-        public bool ConferenceCompetition { get; set; }
+        public Venue Venue {get; set;}
+        public Weather Weather {get; set;}
         public List<Competitor> Competitors { get; set; }
-        public Odds CompetitionOdds { get; set; }
+        public List<Odds> CompetitionOdds { get; set; }
         public Predictors CompetitionPredictors { get; set; }
+    }
+
+    public class Weather
+    {
+        public double Temperature {get; set;}
+        public double FeelsLike {get; set;}
+        public double Humidity {get; set;}
+        public double Visibility {get; set;}
+        public double WindSpeed {get; set;}
+        public double WindDegree {get; set;}
+        public double Rain {get; set;}
+        public double Snow {get; set;}
+    }
+
+    public class Venue
+    {
+        public string StadiumName {get; set;}
+        public string City {get; set;}
+        public string State {get; set;}
+        public string ZipCode {get; set;}
+        public string Country {get; set;}
+        public bool Grass {get; set;}
+        public bool Indoors {get; set;}
+        public bool OutOfUSA {get; set;}
     }
 
     public class Competitor
@@ -28,10 +51,9 @@ namespace backend.Models
     public class Odds
     {
         public string Details { get; set; }
-        public decimal AverageOverUnder { get; set; }
-        public decimal AverageSpread { get; set; }
-        public bool MoneyLineWinner { get; set; }
-        public bool SpreadWinner { get; set; }
+        public decimal OverUnder { get; set; }
+        public decimal Spread { get; set; }
+        public string Provider { get; set; }
     }
 
     public class Predictors

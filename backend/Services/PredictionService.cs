@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using backend.Models;
 using ClosedXML.Excel;
+using backend.DTOs;
 
 namespace backend.Services
 {
@@ -10,20 +11,23 @@ namespace backend.Services
     {
         // TODO: need a way to give the game ID or soemthing to this
         public Task<IEnumerable<PredictionResponse>> GetPredictionsForWeekAsync();
+        public Task<PredictionData> GetPredictionDataForEventAsync(string eventId);
     }
 
     public class PredictionService : IPredictionService
     {
         private readonly IPredictionDataService _predictionDataService;
+        private readonly IOddsService _oddsService;
         private readonly IEventService _eventService;
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly string _exportDirectory;
         private readonly string _filePath;
 
-        public PredictionService(IPredictionDataService predictionDataService, IEventService eventService, HttpClient httpClient)
+        public PredictionService(IPredictionDataService predictionDataService, IOddsService oddsService, IEventService eventService, HttpClient httpClient)
         {
             _predictionDataService = predictionDataService;
+            _oddsService = oddsService;
             _eventService = eventService;
             _httpClient = httpClient;
             _jsonOptions = new JsonSerializerOptions
@@ -48,11 +52,13 @@ namespace backend.Services
                 return new List<PredictionResponse>();
             }
 
-            var predictions = currentGames
-            .Select(e => (e, _predictionDataService.GetPredictionDataForEvent(e)))
-            .ToList();
+            var predictionTasks = currentGames
+                .Select(async e => (e, await GetPredictionDataForEventAsync(e.Id)))
+                .ToList();
 
-            var currentWeek = predictions.FirstOrDefault().e.Week;
+            var predictions = await Task.WhenAll(predictionTasks);
+
+            var currentWeek = predictions.First().e.Week;
 
             var predictionResults = new ConcurrentBag<PredictionResponse>();
             var url = "http://localhost:8000/predict";
@@ -76,6 +82,8 @@ namespace backend.Services
 
                         var result = JsonSerializer.Deserialize<GamePrediction>(responseJson, _jsonOptions);
 
+                        var (bestTotal, bestSpread) = await _oddsService.GetBestOdds(prediction.e);
+
                         if (result != null)
                         {
                             var predictionResponse = new PredictionResponse
@@ -85,13 +93,12 @@ namespace backend.Services
                                 EventId = prediction.e.Id,
                                 Date = prediction.e.Date,
                                 GamePrediction = result,
-                                VegasLowestSpread = prediction.e.Competitions.FirstOrDefault().CompetitionOdds.AverageSpread,
-                                VegasLowestTotal = prediction.e.Competitions.FirstOrDefault().CompetitionOdds.AverageOverUnder,
-                                VegasWinner = prediction.e.Competitions.FirstOrDefault().CompetitionOdds.AverageSpread < 0 ? "Home" : "Away",
-
+                                VegasLowestSpread = bestSpread,
+                                VegasLowestTotal = bestTotal,
+                                VegasWinner = bestSpread.OddsValue < 0 ? "Home" : "Away",
                             };
                             predictionResults.Add(predictionResponse);
-                            
+
                             Console.WriteLine($"Successfully processed prediction for {prediction.Item2.HomeTeamName} vs {prediction.Item2.AwayTeamName}");
                         }
                     }
@@ -106,6 +113,18 @@ namespace backend.Services
 
             SaveToExcel(predictionResults, currentWeek);
             return predictionResults;
+        }
+        
+        public async Task<PredictionData> GetPredictionDataForEventAsync(string eventId)
+        {
+            var eventRef = new RefDto
+            {
+                Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/401772939?lang=en&region=us"
+            };
+
+            var eventResponse = await _eventService.GetEventByRefAsync(eventRef);
+            var predictionData = await _predictionDataService.GetPredictionDataForEvent(eventResponse);
+            return predictionData;
         }
         
         private void SaveToExcel(IEnumerable<PredictionResponse> predictions, int weekNumber)
@@ -134,9 +153,6 @@ namespace backend.Services
                 "WinnerConfidence",
                 "HomeWinProbability",
                 "AwayWinProbability",
-                "ImpliedHomeScore",
-                "ImpliedAwayScore",
-                "ModelsAligned"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -150,8 +166,8 @@ namespace backend.Services
                 worksheet.Cell(row, 1).Value = prediction.HomeTeamName;
                 worksheet.Cell(row, 2).Value = prediction.AwayTeamName;
                 worksheet.Cell(row, 3).Value = prediction.Date;
-                worksheet.Cell(row, 4).Value = prediction.VegasLowestSpread;
-                worksheet.Cell(row, 5).Value = prediction.VegasLowestTotal;
+                worksheet.Cell(row, 4).Value = prediction.VegasLowestSpread.OddsValue;
+                worksheet.Cell(row, 5).Value = prediction.VegasLowestTotal.OddsValue;
                 worksheet.Cell(row, 6).Value = prediction.VegasWinner;
 
                 if (gp != null)
@@ -164,9 +180,6 @@ namespace backend.Services
                     worksheet.Cell(row, 12).Value = gp.WinnerConfidence;
                     worksheet.Cell(row, 13).Value = gp.HomeWinProbability;
                     worksheet.Cell(row, 14).Value = gp.AwayWinProbability;
-                    worksheet.Cell(row, 15).Value = gp.ImpliedHomeScore;
-                    worksheet.Cell(row, 16).Value = gp.ImpliedAwayScore;
-                    worksheet.Cell(row, 17).Value = gp.ModelsAligned;
                 }
 
                 row++;

@@ -14,6 +14,9 @@ namespace backend.DTOs
 
     public class OddsDto
     {
+        [JsonPropertyName("provider")]
+        public Provider Provider { get; set; }
+
         [JsonPropertyName("details")]
         public string Details { get; set; }
 
@@ -22,11 +25,17 @@ namespace backend.DTOs
 
         [JsonPropertyName("spread")]
         public decimal Spread { get; set; }
+    }
 
-        [JsonPropertyName("moneyLineWinner")]
-        public bool MoneyLineWinner { get; set; }
+    public class Provider
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
 
-        [JsonPropertyName("spreadWinner")]
-        public bool SpreadWinner { get; set; }
+        [JsonPropertyName("name")]
+        public string SportsBook { get; set; }
+
+        [JsonPropertyName("priority")]
+        public int Priority { get; set; }
     }
 }

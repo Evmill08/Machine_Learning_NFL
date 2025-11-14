@@ -20,10 +20,20 @@ namespace backend.Controllers
             _predictionService = predictionService;
         }
 
-        [HttpGet("gamePrediction")]
-        public async Task<IActionResult> GetGamePrediction()
+        // Gets predictions for the entire week, good for personal use
+        [HttpGet("weekPrediction")]
+        public async Task<IActionResult> GetWeekPrediction()
         {
             var response = await _predictionService.GetPredictionsForWeekAsync();
+            return Ok(response);
+        }
+
+        // Gets the data for a specific event, much quicker.
+        // EventId is a string here. We pass strings back and forth
+        [HttpGet("gamePrediction/{eventId}")]
+        public async Task<IActionResult> GetGamePrediction(string eventId)
+        {
+            var response = await _predictionService.GetPredictionDataForEventAsync(eventId);
             return Ok(response);
         }
     }

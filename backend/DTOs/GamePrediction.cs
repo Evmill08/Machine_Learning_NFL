@@ -33,14 +33,5 @@ namespace backend.Models
 
         [JsonPropertyName("away_win_probability")]
         public double AwayWinProbability { get; set; }
-
-        [JsonPropertyName("implied_home_score")]
-        public double ImpliedHomeScore { get; set; }
-
-        [JsonPropertyName("implied_away_score")]
-        public double ImpliedAwayScore { get; set; }
-
-        [JsonPropertyName("models_aligned")]
-        public bool ModelsAligned { get; set; }
     }
 }

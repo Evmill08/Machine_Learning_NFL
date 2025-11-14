@@ -1,36 +1,39 @@
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using backend.DTOs;
 using backend.Models;
 using backend.Utilities;
+using Microsoft.AspNetCore.Mvc;
 
+// TODO: For this and I think team service, abstract event service out
 namespace backend.Services
 {
     public interface IOddsService
     {
-        public Task<Odds> GetOddsAsync(RefDto oddsRef);
+        public Task<IEnumerable<Odds>> GetOddsAsync(RefDto oddsRef);
+        public Task<(VegasPrediction, VegasPrediction)> GetBestOdds(Event e);
+        public Task<IEnumerable<Odds>> GetOddsByEventId(int eventId);
     }
 
     public class OddsService : IOddsService
     {
         private readonly HttpClient _httpclient;
+        private readonly Lazy<IEventService> _lazyEventService;
 
-        public OddsService(HttpClient httpClient)
+        public OddsService(HttpClient httpClient, Lazy<IEventService> eventServiceLazy)
         {
             _httpclient = httpClient;
+            _lazyEventService = eventServiceLazy;
         }
 
-        public async Task<Odds> GetOddsAsync(RefDto oddsRef)
+        public async Task<IEnumerable<Odds>> GetOddsAsync(RefDto oddsRef)
         {
-            // This is a fix for missing data, we may just want to wipe this data from the model. 
+            var allOdds = new List<Odds>();
+
             if (oddsRef is null)
             {
-                return new Odds
-                {
-                    Details = "",
-                    AverageOverUnder = 0,
-                    AverageSpread = 0,
-                    MoneyLineWinner = false,
-                    SpreadWinner = false
-                };
+                return allOdds;
             }
 
             // TODO: Think a little bit more about this
@@ -38,27 +41,42 @@ namespace backend.Services
             var oddsResponse = await _httpclient.GetFromJsonResilientAsync<OddsResponseDto>(oddsRef.Ref)
                 ?? throw new Exception("Error fetchings odds response");
 
-            // Can probably clean this up a bit, but since 2025 games don't have odds data for future weeks, we can get divide by 0 errors 
-            var minimizedTotal = (oddsResponse.Odds.Sum(x => x.OverUnder) == 0 || oddsResponse.Odds.Count == 0)
-                ? 0
-                : oddsResponse.Odds.Min(x => x.OverUnder);
-
-            var minimizedSpread = (oddsResponse.Odds.Sum(x => x.Spread) == 0 || oddsResponse.Odds.Count == 0)
-                ? 0
-                : oddsResponse.Odds.Min(x => x.Spread);
-
-            var MlWinner = (oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).MoneyLineWinner;
-            var AtsWinner = (oddsResponse.Odds.Count > 0) && oddsResponse.Odds.ElementAt(0).SpreadWinner;
-
-            // TODO: This is not how we want to handle this data. Need to think about this more
-            return new Odds
+            allOdds = oddsResponse.Odds.Select(o => new Odds
             {
-                Details = "",
-                AverageOverUnder = minimizedTotal, // if mins are what we go with, change model names
-                AverageSpread = minimizedSpread,
-                MoneyLineWinner = MlWinner,
-                SpreadWinner = AtsWinner,
-            };
+                Details = o.Details,
+                OverUnder = o.OverUnder,
+                Spread = o.Spread,
+            }).ToList();
+
+            return allOdds;
+        }
+
+        public async Task<(VegasPrediction, VegasPrediction)> GetBestOdds(Event e)
+        {
+            var allOdds = e.Competitions.FirstOrDefault().CompetitionOdds;
+
+            var bestTotal = allOdds.Select(o => new VegasPrediction
+            {
+                SportsBook = o.Provider,
+                OddsValue = o.OverUnder,
+            }).OrderBy(o => o.OddsValue)
+            .First();
+
+            var bestSpread = allOdds.Select(o => new VegasPrediction
+            {
+                SportsBook = o.Provider,
+                OddsValue = o.Spread,
+            }).OrderBy(o => Math.Abs(o.OddsValue))
+            .First();
+
+            return (bestTotal, bestSpread);
+        }
+
+        public async Task<IEnumerable<Odds>> GetOddsByEventId(int eventId)
+        {
+            var e = await _lazyEventService.Value.GetEventByIdAsync(eventId);
+
+            return e.Competitions.FirstOrDefault().CompetitionOdds;
         }
     }
 }

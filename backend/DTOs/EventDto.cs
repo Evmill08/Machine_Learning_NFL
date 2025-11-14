@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using DocumentFormat.OpenXml;
 // TODO: For ALL DTOs, I need to align the names of the properties
 // to what the API returns, and use JsonPropertyName for every property
 // Also need to change all field to properties by adding getters and initers
@@ -39,14 +40,8 @@ namespace backend.DTOs
         [JsonPropertyName("dateValid")]
         public bool DateValid { get; set; }
 
-        [JsonPropertyName("nuetralSite")]
-        public bool NuetralSite { get; set; }
-
-        [JsonPropertyName("divisionCompetition")]
-        public bool DivisionCompetition { get; set; }
-
-        [JsonPropertyName("conferenceCompetition")]
-        public bool ConferenceCompetition { get; set; }
+        [JsonPropertyName("venue")]
+        public VenueDto Venue {get; set;}
 
         [JsonPropertyName("competitors")]
         public List<CompetitorDto> Competitors { get; set; }
@@ -56,6 +51,48 @@ namespace backend.DTOs
 
         [JsonPropertyName("predictor")]
         public RefDto PredictorRef { get; set; }
+    }
+
+    public class VenueDto
+    {
+        [JsonPropertyName("fullName")]
+        public string StadiumName {get; set;}
+
+        [JsonPropertyName("address")]
+        public AddressDto AddressDto {get; set;}
+
+        [JsonPropertyName("grass")]
+        public bool Grass {get; set;}
+
+        [JsonPropertyName("indoor")]
+        public bool Indoors{get; set;}
+    }
+
+    public class Coordinates
+    {
+        [JsonPropertyName("name")]
+        public string City {get; set;}
+        
+        [JsonPropertyName("latitude")]
+        public double Latitude {get; set;}
+        
+        [JsonPropertyName("longitude")]
+        public double Longitude {get; set;}
+    }
+
+    public class AddressDto
+    {
+        [JsonPropertyName("city")]
+        public string City {get; set;}
+
+        [JsonPropertyName("state")]
+        public string State {get; set;}
+
+        [JsonPropertyName("zipCode")]
+        public string zipCode {get; set;}
+
+        [JsonPropertyName("country")]
+        public string Country {get; set;}
     }
 
     public class CompetitorDto
