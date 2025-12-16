@@ -67,11 +67,13 @@ builder.Services.AddHttpClient<IPredictionService, PredictionService>()
 builder.Services.AddHttpClient<IWeatherService, WeatherService>()
     .SetHandlerLifetime(TimeSpan.FromMinutes(2));
 
+builder.Services.AddHttpClient<IGameDataService, GameDataService>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(2));
+
 // Register the remaining services that do NOT need HttpClient (regular DI)
 builder.Services.AddScoped<IEndpointTestService, EndpointTestService>();
 builder.Services.AddScoped<IPredictionDataService, PredictionDataService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
-builder.Services.AddScoped<IGameDataService, GameDataService>();
 
 builder.Services.AddScoped<Lazy<IEventService>>(provider => 
     new Lazy<IEventService>(() => provider.GetRequiredService<IEventService>()));

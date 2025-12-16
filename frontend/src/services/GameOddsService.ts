@@ -2,7 +2,7 @@
 
 import { GameOdds } from "../models/GameOdds";
 
-export async function GetGameOdds(eventId: number): Promise<Array<GameOdds> | undefined> {
+export async function GetGameOdds(eventId: string): Promise<Array<GameOdds> | undefined> {
     var url = `http://localhost:5145/odds/allOdds/${eventId}`;
 
     try {

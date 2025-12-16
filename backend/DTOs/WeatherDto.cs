@@ -2,33 +2,52 @@ using System.Text.Json.Serialization;
 
 public class WeatherDto
 {
-    [JsonPropertyName("data")]
-    public List<WeatherDataDto> WeatherData {get; set;}
+    [JsonPropertyName("daily")]
+    public WeatherDataDto WeatherData {get; set;}
 }
 
 public class WeatherDataDto
 {
-    [JsonPropertyName("temp")]
-    public double Temperature {get; set;}
+    [JsonPropertyName("temperature_2m_mean")]
+	public List<double> MeanTemperature {get; set;}
 
-    [JsonPropertyName("feels_like")]
-    public double FeelsLike {get; set;}    
+    [JsonPropertyName("temperature_2m_max")]
+	public List<double> MaxTemperature {get; set;}
 
-    [JsonPropertyName("humidity")]
-    public double Humidity {get; set;}
+    [JsonPropertyName("temperature_2m_min")]
+	public List<double> MinTemperature {get; set;}
 
-    [JsonPropertyName("visibility")]
-    public double Visibility {get; set;}
+    [JsonPropertyName("apparent_temperature_mean")]
+	public List<double> ApparentTemperature {get; set;}
 
-    [JsonPropertyName("wind_speed")]
-    public double WindSpeed {get; set;}
+    [JsonPropertyName("precipitation_sum")]
+	public List<double> PrecipitationSum {get; set;}
 
-    [JsonPropertyName("wind_deg")]
-    public double WindDegree {get; set;}
+    [JsonPropertyName("snowfall_sum")]
+	public List<double> SnowfallSum {get; set;}
 
-    [JsonPropertyName("rain")]
-    public double Rain {get; set;} //mm/h
+    [JsonPropertyName("precipitation_hours")]
+	public List<double> PrecipitationHours {get; set;}
 
-    [JsonPropertyName("snow")]
-    public double Snow {get; set;} //mm/h
+    [JsonPropertyName("rain_sum")]
+	public List<double> RainSum {get; set;}
+
+    [JsonPropertyName("wind_speed_10m_max")]
+	public List<double> WindSpeedMax {get; set;}
+
+    [JsonPropertyName("wind_gusts_10m_max")]
+	public List<double> WindGustsMax {get; set;}
+
+    [JsonPropertyName("wind_direction_10m_dominant")]
+	public List<double> DominantWindDirection {get; set;}
+
+    [JsonPropertyName("relative_humidity_2m_mean")]
+	public List<double> MeanRelativeHumidity {get; set;}
+
+    [JsonPropertyName("wind_gusts_10m_mean")]
+	public List<double> MeanWindGusts {get; set;}
+
+    [JsonPropertyName("wind_speed_10m_mean")]
+	public List<double> MeanWindSpeed {get; set;}
+
 }

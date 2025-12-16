@@ -32,9 +32,7 @@ C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\backend.
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\ref\backend.dll
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\backend.sourcelink.json
 C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\backend.staticwebassets.runtime.json
-C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\8p510ahlje-4d9e46gu1i.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\e6tjwschk4-1f2oqlqaa3.gz
-C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\0yulyb0yu6-frl7gex3g8.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\owyr0b8s6q-4bysstsvp2.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\jozyi3lgnh-sl60c43r8o.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\7kqpqu9nhd-dad56o2st1.gz
@@ -53,3 +51,8 @@ C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\ExcelNum
 C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\RBush.dll
 C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\SixLabors.Fonts.dll
 C:\Users\evmil\source\repos\BettingPredictions\backend\bin\Debug\net9.0\System.IO.Packaging.dll
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\8p510ahlje-0p34t6jtb9.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\0yulyb0yu6-0ypvdgnqyz.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\mvi5o52amj-yxf4ui4t3x.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\xsu9zhdtum-kmpxxtsv97.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\vpr15gr635-o6afcimqe0.gz

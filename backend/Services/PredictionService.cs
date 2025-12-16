@@ -4,6 +4,7 @@ using System.Text.Json;
 using backend.Models;
 using ClosedXML.Excel;
 using backend.DTOs;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace backend.Services
 {
@@ -19,16 +20,18 @@ namespace backend.Services
         private readonly IPredictionDataService _predictionDataService;
         private readonly IOddsService _oddsService;
         private readonly IEventService _eventService;
+        private readonly IMemoryCache _cache;
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly string _exportDirectory;
         private readonly string _filePath;
 
-        public PredictionService(IPredictionDataService predictionDataService, IOddsService oddsService, IEventService eventService, HttpClient httpClient)
+        public PredictionService(IPredictionDataService predictionDataService, IOddsService oddsService, IEventService eventService, HttpClient httpClient, IMemoryCache cache)
         {
             _predictionDataService = predictionDataService;
             _oddsService = oddsService;
             _eventService = eventService;
+            _cache = cache;
             _httpClient = httpClient;
             _jsonOptions = new JsonSerializerOptions
             {
@@ -117,13 +120,26 @@ namespace backend.Services
         
         public async Task<PredictionData> GetPredictionDataForEventAsync(string eventId)
         {
+            var cacheKey = $"predictiondata:{eventId}";
+
+            if (_cache.TryGetValue(cacheKey, out PredictionData cachedPredictionData))
+            {
+                return cachedPredictionData;
+            }
+
             var eventRef = new RefDto
             {
-                Ref = "http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/401772939?lang=en&region=us"
+                Ref = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/{eventId}?lang=en&region=us"
             };
 
             var eventResponse = await _eventService.GetEventByRefAsync(eventRef);
             var predictionData = await _predictionDataService.GetPredictionDataForEvent(eventResponse);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromHours(6)); 
+
+            _cache.Set(cacheKey, predictionData, cacheOptions);
+
             return predictionData;
         }
         

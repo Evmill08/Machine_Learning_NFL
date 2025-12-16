@@ -20,8 +20,22 @@ namespace backend.Models
         public int AwayWinner { get; set; } // 1 if true
         public decimal AveragePredictedTotal { get; set; }
         public decimal AveragePredictedSpread { get; set; }
-        public VegasPrediction BestPredictedTotal { get; set; }
-        public VegasPrediction BestPredictedSpread { get; set; }
+        public double BestPredictedTotal {get; set;}
+        public double BestPredictedSpread {get; set;}
+        public double MeanTemperature {get; set;}
+        public double MaxTemperature {get; set;}
+        public double MinTemperature {get; set;}
+        public double ApparentTemperature {get; set;}
+        public double PrecipitationSum {get; set;}
+        public double SnowfallSum {get; set;}
+        public double PrecipitationHours {get; set;}
+        public double RainSum {get; set;}
+        public double WindSpeedMax {get; set;}
+        public double WindGustsMax {get; set;}
+        public double DominantWindDirection {get; set;}
+        public double MeanRelativeHumidity {get; set;}
+        public double MeanWindGusts {get; set;}
+        public double MeanWindSpeed {get; set;}
         public decimal PredictedHomeWinPercent { get; set; }
         public decimal PredicitedHomeMatchupQuality { get; set; }
         public decimal PredictedHomeLossPercent { get; set; }
@@ -41,6 +55,6 @@ namespace backend.Models
     public class VegasPrediction
     {
         public string SportsBook { get; set; }
-        public decimal OddsValue { get; set; }
+        public double OddsValue { get; set; }
     }
 }

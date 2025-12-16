@@ -1,4 +1,7 @@
+using backend.DTOs;
 using backend.Models;
+using backend.Utilities;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace backend.Services
 {
@@ -9,11 +12,15 @@ namespace backend.Services
 
     public class GameDataService : IGameDataService
     {
+        private readonly HttpClient _httpClient;
         private readonly IWeeksService _weeksService;
+        private readonly IEventService _eventService;
 
-        public GameDataService(IWeeksService weeksService)
+        public GameDataService(HttpClient httpClient, IWeeksService weeksService, IEventService eventService)
         {
+            _httpClient = httpClient;
             _weeksService = weeksService;
+            _eventService = eventService;
         }
 
         public async Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync()
@@ -23,30 +30,16 @@ namespace backend.Services
 
             var currentWeek = await _weeksService.GetWeekByWeekNumberAsync(currentYear, currentWeekNumber);
 
-            var currentWeekGames = new List<GameData>();
+            var eventsResponse = await _httpClient.GetFromJsonResilientAsync<EventsResponseDto>(currentWeek.EventRefs.Ref)
+                ?? throw new Exception("Error fetching events for current week");
 
-            Parallel.ForEach(
-                currentWeek.Events,
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-                async e =>
-                {
-                    var competition = e.Competitions.FirstOrDefault();
-                    var homeTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "home").Team;
-                    var awayTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "away").Team;
+            var gameDataTasks = eventsResponse.EventRefs.Select(async eventRef =>
+            {
+                return await _eventService.GetGameDataByEventRef(eventRef, currentYear);
+            });
 
-                    currentWeekGames.Add(new GameData
-                    {
-                        HomeTeamName = homeTeam.Name,
-                        AwayTeamName = awayTeam.Name,
-                        HomeTeamID = homeTeam.Id,
-                        AwayTeamId = awayTeam.Id,
-                        EventId = e.Id,
-                        Date = competition.Date,
-                    });
-                }
-            );
-
-            return currentWeekGames;
+            var gameDataResults = await Task.WhenAll(gameDataTasks);
+            return gameDataResults.SelectMany(g => g);
         }
     }
 }

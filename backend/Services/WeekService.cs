@@ -8,7 +8,8 @@ namespace backend.Services
     public interface IWeeksService
     {
         public Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default);
-        public Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
+        public Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
+        public Task<Week> GetWeekDataByWeekNumberAsync(int seasonYear, int weekNumber);
         public Task<Week> GetWeekByRefAsync(RefDto weekRef);
         public Task<int> GetWeekNumberAsync();
     }
@@ -55,12 +56,19 @@ namespace backend.Services
                 .ToArray();
         }
 
-        public async Task<Week> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
+        public async Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
         {
             var url = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks/{weekNumber}?lang=en&region=us";
 
             var response = await _httpClient.GetFromJsonResilientAsync<WeekDto>(url)
                 ?? throw new Exception($"Week data not found for week {weekNumber} of the {seasonYear} season");
+
+            return response;
+        }
+
+        public async Task<Week> GetWeekDataByWeekNumberAsync(int seasonYear, int weekNumber)
+        {
+            var response = await GetWeekByWeekNumberAsync(seasonYear, weekNumber);
 
             // Resolve IEventService lazily only when needed
             var events = await _eventServiceLazy.Value.GetEventsByRefAsync(response.EventRefs);

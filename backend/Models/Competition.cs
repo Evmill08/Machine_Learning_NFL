@@ -17,14 +17,20 @@ namespace backend.Models
 
     public class Weather
     {
-        public double Temperature {get; set;}
-        public double FeelsLike {get; set;}
-        public double Humidity {get; set;}
-        public double Visibility {get; set;}
-        public double WindSpeed {get; set;}
-        public double WindDegree {get; set;}
-        public double Rain {get; set;}
-        public double Snow {get; set;}
+        public double MeanTemperature {get; set;}
+        public double MaxTemperature {get; set;}
+        public double MinTemperature {get; set;}
+        public double ApparentTemperature {get; set;}
+        public double PrecipitationSum {get; set;}
+        public double SnowfallSum {get; set;}
+        public double PrecipitationHours {get; set;}
+        public double RainSum {get; set;}
+        public double WindSpeedMax {get; set;}
+        public double WindGustsMax {get; set;}
+        public double DominantWindDirection {get; set;}
+        public double MeanRelativeHumidity {get; set;}
+        public double MeanWindGusts {get; set;}
+        public double MeanWindSpeed {get; set;}
     }
 
     public class Venue

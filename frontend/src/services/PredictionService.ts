@@ -4,7 +4,7 @@
 
 import { PredictionData } from "../models/PredictionData";
 
-export async function GetGamePrediction(eventId: number): Promise<PredictionData | undefined>{
+export async function GetGamePrediction(eventId: string): Promise<PredictionData | undefined>{
     const url = `http://localhost:5145/prediction/gamePrediction/${eventId}`;
 
     try {

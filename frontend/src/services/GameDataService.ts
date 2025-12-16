@@ -3,7 +3,7 @@
 
 import { GameData } from "../models/GameData";
 
-export async function GetGameData(eventId: number): Promise<Array<GameData> | undefined>{
+export async function GetGameData(): Promise<Array<GameData> | null>{
     const url = `http://localhost:5145/game/currentWeekGames`;
 
     try {
@@ -18,6 +18,6 @@ export async function GetGameData(eventId: number): Promise<Array<GameData> | un
 
     } catch (error){
         console.error("Error fetching users: ", error);
-        return undefined;
+        return null;
     }
 }

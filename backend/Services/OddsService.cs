@@ -13,7 +13,7 @@ namespace backend.Services
     {
         public Task<IEnumerable<Odds>> GetOddsAsync(RefDto oddsRef);
         public Task<(VegasPrediction, VegasPrediction)> GetBestOdds(Event e);
-        public Task<IEnumerable<Odds>> GetOddsByEventId(int eventId);
+        public Task<IEnumerable<Odds>> GetOddsByEventId(string eventId);
     }
 
     public class OddsService : IOddsService
@@ -55,24 +55,27 @@ namespace backend.Services
         {
             var allOdds = e.Competitions.FirstOrDefault().CompetitionOdds;
 
-            var bestTotal = allOdds.Select(o => new VegasPrediction
+            var bestTotal = allOdds.Where(x => x.Details != null)
+            .Select(o => new VegasPrediction
             {
                 SportsBook = o.Provider,
-                OddsValue = o.OverUnder,
+                OddsValue = (double)o.OverUnder,
             }).OrderBy(o => o.OddsValue)
+            
             .First();
 
-            var bestSpread = allOdds.Select(o => new VegasPrediction
+            var bestSpread = allOdds.Where(x => x.Details != null)
+            .Select(o => new VegasPrediction
             {
                 SportsBook = o.Provider,
-                OddsValue = o.Spread,
+                OddsValue = (double)o.Spread,
             }).OrderBy(o => Math.Abs(o.OddsValue))
             .First();
 
             return (bestTotal, bestSpread);
         }
 
-        public async Task<IEnumerable<Odds>> GetOddsByEventId(int eventId)
+        public async Task<IEnumerable<Odds>> GetOddsByEventId(string eventId)
         {
             var e = await _lazyEventService.Value.GetEventByIdAsync(eventId);
 

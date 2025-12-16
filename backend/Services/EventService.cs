@@ -1,10 +1,8 @@
 using backend.Models;
 using backend.DTOs;
 using backend.Utilities;
-using DocumentFormat.OpenXml.ExtendedProperties;
-using DocumentFormat.OpenXml.Drawing;
-using System.Runtime.CompilerServices;
-using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace backend.Services
 {
@@ -14,12 +12,14 @@ namespace backend.Services
         public Task<IEnumerable<Event>> GetEventsByRefAsync(RefDto eventsRef);
         public Task<Event> GetEventByRefAsync(RefDto eventRef);
         public Task<IEnumerable<Event>> GetEventsForCurrentWeek(int seasonYear);
-        public Task<Event> GetEventByIdAsync(int eventID);
+        public Task<IEnumerable<GameData>> GetGameDataByEventRef(RefDto eventRef, int seasonNumber);
+        public Task<Event> GetEventByIdAsync(string eventID);
     }
 
     public class EventService : IEventService
     {
         private readonly HttpClient _httpClient;
+        private readonly IMemoryCache _cache;
         private readonly ITeamService _teamService;
         private readonly IScoreService _scoreService;
         private readonly IOddsService _oddsService;
@@ -30,6 +30,7 @@ namespace backend.Services
 
         public EventService(
             HttpClient httpClient,
+            IMemoryCache cache,
             ITeamService teamService,
             IScoreService scoreService,
             IOddsService oddsService,
@@ -38,6 +39,7 @@ namespace backend.Services
             IWeatherService weatherService)
         {
             _httpClient = httpClient;
+            _cache = cache;
             _teamService = teamService;
             _scoreService = scoreService;
             _oddsService = oddsService;
@@ -109,17 +111,13 @@ namespace backend.Services
         public async Task<IEnumerable<Event>> GetEventsForCurrentWeek(int seasonYear)
         {
             var weekNumber = await _weeksService.GetWeekNumberAsync();
-            var week = await _weeksService.GetWeekByWeekNumberAsync(Year, weekNumber);
+            var week = await _weeksService.GetWeekDataByWeekNumberAsync(Year, weekNumber);
             var events = week.Events;
             return events;
         }
 
         private async Task<Event> GetEventFromEventDto(EventDto response, int seasonNumber = 2025, int weekNumber = 1)
         {
-            if (response.Competitions == null)
-            {
-                Console.WriteLine("What");
-            }
             var competitionTasks = response.Competitions.Select(async comp =>
             {
                 var competitorTasks = comp.Competitors.Select(async c =>
@@ -186,7 +184,7 @@ namespace backend.Services
             };
         }
 
-        public async Task<Event> GetEventByIdAsync(int eventID)
+        public async Task<Event> GetEventByIdAsync(string eventID)
         {
             var eventRef = new RefDto
             {
@@ -194,6 +192,66 @@ namespace backend.Services
             };
 
             return await GetEventByRefAsync(eventRef);
+        }
+
+        public async Task<IEnumerable<GameData>> GetGameDataByEventRef(RefDto eventRef, int seasonNumber)
+        {
+            var eventResponse = await _httpClient.GetFromJsonResilientAsync<EventDto>(eventRef.Ref)
+                ?? throw new Exception("Error fetching event by ref");
+
+            var cacheKey = $"gamedata:{eventResponse.Id}";
+
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<GameData> cachedGameData))
+            {
+                return cachedGameData;
+            }
+
+            var gameDataTasks = eventResponse.Competitions.Select(async comp =>
+            {
+                var competitorTasks = comp.Competitors.Select(async c =>
+                {
+                    var team = await _teamService.GetTeamAsync(c.TeamRef, seasonNumber);
+
+                    return new Competitor
+                    {
+                        Id = c.Id,
+                        HomeAway = c.HomeAway,
+                        Winner = c.Winner,
+                        Team = team,
+                        CompetitorScore = new Score{}
+                    };
+                });
+
+                var competitors = await Task.WhenAll(competitorTasks);
+                var date = DateTime.Parse(comp.Date, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+
+                var homeTeam = competitors.FirstOrDefault(c => c.HomeAway == "home")?.Team;
+                var awayTeam = competitors.FirstOrDefault(c => c.HomeAway == "away")?.Team;
+
+                if (homeTeam == null || awayTeam == null)
+                {
+                    throw new Exception($"Missing home or away team for competition {comp.Id}");
+                }
+
+                return new GameData
+                {
+                    HomeTeamName = homeTeam.Name,
+                    AwayTeamName = awayTeam.Name,
+                    HomeTeamID = homeTeam.Id,
+                    AwayTeamId = awayTeam.Id,
+                    EventId = eventResponse.Id,
+                    Date = date
+                };
+            });
+
+            var gameDataResponse = await Task.WhenAll(gameDataTasks);
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromHours(6));
+
+            _cache.Set(cacheKey, gameDataResponse, cacheOptions);
+            
+            return gameDataResponse;
         }
     }
 } 
