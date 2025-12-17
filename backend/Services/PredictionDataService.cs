@@ -76,6 +76,12 @@ namespace backend.Services
 
         public async Task<PredictionData> GetPredictionDataForEvent(Event game)
         {
+            // TODO: THIS SHOULD NOT BE HARDCODED, WE NEED TO FIX THIS LATER
+            var currentWeek = 16;
+            if (game.Week >= currentWeek)
+            {
+                return new PredictionData{};
+            }
             var competition = game.Competitions.FirstOrDefault();
             var homeTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "home");
             var awayTeam = competition.Competitors.FirstOrDefault(team => team.HomeAway == "away");

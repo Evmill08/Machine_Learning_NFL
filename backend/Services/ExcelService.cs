@@ -163,7 +163,7 @@ namespace backend.Services
 
         public async Task ExportYearDataToExcelAsync()
         {
-            int currentSeasonYear = DateTime.Now.Year - 1;
+            int currentSeasonYear = DateTime.Now.Year;
             var predictionData = await _predictionDataService.GetPredictionDataForYear(currentSeasonYear);
 
             // Load existing workbook if available, otherwise create new

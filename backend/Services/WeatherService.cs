@@ -42,6 +42,10 @@ namespace backend.Services
         private async Task<Weather> GetAppropriateWeatherDataAsync(double lat, double lon, DateTime date, bool forecast)
         {
             string start = date.ToString("yyyy-MM-dd");
+            if (Convert.ToInt32(start.Split('-').ElementAt(0)) >= 2026)
+            {
+                return new Weather{};
+            }
             string end = start;
             string url = "";
 
