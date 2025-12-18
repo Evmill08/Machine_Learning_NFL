@@ -17,6 +17,7 @@ namespace backend.Services
         private readonly IEventService _eventService;
         private readonly string _exportDirectory;
         private readonly string _filePath;
+        private readonly string _internalFilePath;
 
         public ExcelService(IPredictionDataService predictionDataService, IEventService eventService)
         {
@@ -24,9 +25,20 @@ namespace backend.Services
             _eventService = eventService;
 
             _exportDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NFLPredictions");
+
             Directory.CreateDirectory(_exportDirectory);
 
+            var baseDir = AppContext.BaseDirectory;
+
+            var projectRoot = Directory.GetParent(baseDir)!.Parent!.Parent!.FullName;
+
             _filePath = Path.Combine(_exportDirectory, "NFL_Predictions.xlsx");
+            _internalFilePath = Path.Combine(
+                projectRoot,
+                "Data",
+                "Old Data",
+                "NFL_Predictions.xlsx"
+            );
         }
 
         public async Task ExportRangeDataToExcelAsync(int startYear, int endYear)
@@ -212,8 +224,11 @@ namespace backend.Services
             worksheet.Row(1).Style.Font.Bold = true;
             worksheet.Columns().AdjustToContents();
 
+            // Save to both external and internal paths, should update the current Old Data 
             workbook.SaveAs(_filePath);
-            Console.WriteLine($"✅ Exported year data to sheet '{sheetName}' in {_filePath}");
+            workbook.SaveAs(_internalFilePath);
+            Console.WriteLine($"Exported year data to sheet '{sheetName}' in {_filePath}");
+            Console.WriteLine($"Exported year data to sheet '{sheetName}' in {_internalFilePath}");
         }
 
     }

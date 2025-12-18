@@ -29,7 +29,15 @@ namespace backend.Services
             var response = await _httpClient.GetFromJsonResilientAsync<SeasonDto>(url)
                 ?? throw new Exception($"Error fetching {seasonYear} season data.");
 
-            var weeks = await _weeksService.GetAllWeeksForYearAsync(response.Year);
+            var weeks = new List<Week>();
+
+            if (seasonYear == DateTime.Now.Year)
+            {
+                weeks = await _weeksService.GetCompletedWeeksForCurrentYearAsync(seasonYear);
+            } else
+            {
+                weeks = await _weeksService.GetAllWeeksForYearAsync(seasonYear);
+            }
 
             return new Season
             {
@@ -40,12 +48,11 @@ namespace backend.Services
                 {
                     Id = response.Type.Id,
                     Type = response.Type.Type,
-                    Weeks = weeks.ToList(),
+                    Weeks = weeks,
                 }
             };
         }
 
-        // TODO: We need to figure out how many years we want to get here
         public async Task<IEnumerable<Season>> GetSeasonsRangedAsync(int startYear, int endYear)
         {
             var count = endYear - startYear + 1;

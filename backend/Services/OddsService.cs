@@ -36,8 +36,6 @@ namespace backend.Services
                 return allOdds;
             }
 
-            // TODO: Think a little bit more about this
-            // It is optimal for predictions to have the minimized spread and total to have the best odds to beat vegas.
             var oddsResponse = await _httpclient.GetFromJsonResilientAsync<OddsResponseDto>(oddsRef.Ref)
                 ?? throw new Exception("Error fetchings odds response");
 
@@ -53,6 +51,12 @@ namespace backend.Services
 
         public async Task<(VegasPrediction, VegasPrediction)> GetBestOdds(Event e)
         {
+            if (e.Competitions.FirstOrDefault().CompetitionOdds is null)
+            {
+                var v1 = new VegasPrediction{};
+                var v2 = new VegasPrediction{};
+                return (v1, v2);
+            }
             var allOdds = e.Competitions.FirstOrDefault().CompetitionOdds;
 
             var bestTotal = allOdds.Where(x => x.Details != null)
@@ -61,7 +65,6 @@ namespace backend.Services
                 SportsBook = o.Provider,
                 OddsValue = (double)o.OverUnder,
             }).OrderBy(o => o.OddsValue)
-            
             .First();
 
             var bestSpread = allOdds.Where(x => x.Details != null)

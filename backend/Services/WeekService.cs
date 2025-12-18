@@ -7,7 +7,8 @@ namespace backend.Services
 {
     public interface IWeeksService
     {
-        public Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default);
+        public Task<List<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default);
+        public Task<List<Week>> GetCompletedWeeksForCurrentYearAsync(int currentYear, CancellationToken cancellationToken = default);
         public Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber);
         public Task<Week> GetWeekDataByWeekNumberAsync(int seasonYear, int weekNumber);
         public Task<Week> GetWeekByRefAsync(RefDto weekRef);
@@ -25,7 +26,7 @@ namespace backend.Services
             _eventServiceLazy = eventServiceLazy;
         }
 
-        public async Task<IEnumerable<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default)
+        public async Task<List<Week>> GetAllWeeksForYearAsync(int seasonYear, CancellationToken cancellationToken = default)
         {
             var topLevelUrl = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{seasonYear}/types/2/weeks?lang=en&region=us";
 
@@ -53,7 +54,19 @@ namespace backend.Services
             return weeks
                 .Where(w => w != null)
                 .OrderBy(w => w.WeekNumber)
-                .ToArray();
+                .ToList();
+        }
+
+        public async Task<List<Week>> GetCompletedWeeksForCurrentYearAsync(int currentYear, CancellationToken cancellationToken = default)
+        {
+            var currentWeek = await GetWeekNumberAsync();
+            var weekList = new List<Week>();
+            for (int i = 0; i < currentWeek; ++i)
+            {
+                var weekData = await GetWeekDataByWeekNumberAsync(currentYear, i);
+                weekList.Add(weekData);
+            }
+            return weekList;
         }
 
         public async Task<WeekDto> GetWeekByWeekNumberAsync(int seasonYear, int weekNumber)
@@ -70,7 +83,6 @@ namespace backend.Services
         {
             var response = await GetWeekByWeekNumberAsync(seasonYear, weekNumber);
 
-            // Resolve IEventService lazily only when needed
             var events = await _eventServiceLazy.Value.GetEventsByRefAsync(response.EventRefs);
 
             return new Week

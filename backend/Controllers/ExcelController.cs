@@ -29,7 +29,7 @@ namespace backend.Controllers
         }
 
         [HttpGet("year")]
-        public async Task<IActionResult> GetPredictionDataForYear()
+        public async Task<IActionResult> GetPredictionDataForCurrentYear()
         {
             await _excelService.ExportYearDataToExcelAsync();
             return Ok("NFL_Predictions updated with this years games");
