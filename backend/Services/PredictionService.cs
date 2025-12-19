@@ -12,6 +12,7 @@ namespace backend.Services
     {
         // TODO: need a way to give the game ID or soemthing to this
         public Task<IEnumerable<PredictionResponse>> GetPredictionsForWeekAsync();
+        public Task<PredictionResponse> GetPredictionsForEventAsync(string eventId);
         public Task<PredictionData> GetPredictionDataForEventAsync(string eventId);
     }
 
@@ -42,6 +43,58 @@ namespace backend.Services
             Directory.CreateDirectory(_exportDirectory);
 
             _filePath = Path.Combine(_exportDirectory, "NFL_Predictions.xlsx");
+        }
+
+        public async Task<PredictionResponse> GetPredictionsForEventAsync(string eventId)
+        {
+            var e = await _eventService.GetEventByIdAsync(eventId);
+            var predictionData = await _predictionDataService.GetPredictionDataForEvent(e);
+
+            var url = "http://localhost:8000/predict";
+
+            var predictionResult = new PredictionResponse{};
+
+            try
+            {
+                var jsonContent = JsonSerializer.Serialize(predictionData, _jsonOptions);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                Console.WriteLine($"Sending to FastAPI for {predictionData.HomeTeamName} vs {predictionData.AwayTeamName}:");
+                Console.WriteLine(jsonContent.Substring(0, Math.Min(500, jsonContent.Length)) + "...");
+
+                var response = await _httpClient.PostAsync(url, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+
+                    var result = JsonSerializer.Deserialize<GamePrediction>(responseJson, _jsonOptions);
+
+                    var (bestTotal, bestSpread) = await _oddsService.GetBestOdds(e);
+
+
+                    if (result != null)
+                    {
+                        var predictionResponse = new PredictionResponse
+                            {
+                                HomeTeamName = predictionData.HomeTeamName,
+                                AwayTeamName = predictionData.AwayTeamName,
+                                EventId = e.Id,
+                                Date = e.Date,
+                                GamePrediction = result,
+                                VegasLowestSpread = bestSpread,
+                                VegasLowestTotal = bestTotal,
+                                VegasWinner = bestSpread.OddsValue < 0 ? "Home" : "Away",
+                            };
+                        predictionResult = predictionResponse;
+                    }
+                }   
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling FastAPI: {ex.Message}");
+            }
+            return predictionResult;
         }
 
         public async Task<IEnumerable<PredictionResponse>> GetPredictionsForWeekAsync()

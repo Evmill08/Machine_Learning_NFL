@@ -1,23 +1,30 @@
 import xgboost as xg
-from sklearn.metrics import accuracy_score, mean_absolute_error
+from sklearn.metrics import accuracy_score, mean_absolute_error, log_loss, roc_auc_score
 from xgboost import XGBRegressor
 import pandas as pd
+from pathlib import Path
 
-# WE NEED:
-# 2 regression models for total and spread
-# One classifier for the winner
 
 def drop_non_numeric(df: pd.DataFrame) -> pd.DataFrame:
     return df.select_dtypes(include=["number", "bool"])
 
 def train_model():
-    training_data = pd.read_csv("Data\\\\TrainingData\\\\game_team_data_2025.csv")
-    testing_data = pd.read_csv("Data\\\\TrainingData\\\\game_team_data_2018_2024.csv")
+    BASE_DIR = Path(__file__).parent.parent  
+    TEAM_STATS_FILE_TRAIN = BASE_DIR / "Data" / "TrainingData" / "game_team_data_2018_2024.csv"
+    TEAM_STATS_FILE_TEST = BASE_DIR / "Data" / "TrainingData" / "game_team_data_2025.csv"
+
+    training_data = pd.read_csv(TEAM_STATS_FILE_TRAIN)
+    testing_data = pd.read_csv(TEAM_STATS_FILE_TEST)
 
     target_cols = ["TotalPoints", "Spread", "HomeWin"]
 
     base_drop_cols = [
+        "Spread_x",
+        "Spread_y",
+        "TotalPoints_x",
+        "TotalPoints_y",
         "game_id",
+        "EventId,"
         "team_x",
         "season_type_x",
         "opponent_team_x",
@@ -39,25 +46,43 @@ def train_model():
         "HomeTeamName_y",
         "AwayTeamName_y",
         "HomeTeamName",
-        "AwayTeamName"
+        "AwayTeamName",
+        "fg_blocked_list_x",
+        "fg_blocked_list_y"
     ]
 
     X_train = training_data.drop(
         columns=[c for c in base_drop_cols + target_cols if c in training_data.columns]
     )
 
-    X_train = drop_non_numeric(X_train)
+    X_train = X_train.select_dtypes(include=["number"])
 
     X_test = testing_data.drop(
         columns=[c for c in base_drop_cols + target_cols if c in testing_data.columns]
     )
 
-    X_test = drop_non_numeric(X_test)
+    X_test  = X_test.select_dtypes(include=["number"])
 
-    print(X_train.columns.to_list())
-    print("\n\n")
-    print(X_test.columns.to_list())
-    
+    LEAKY_WIN_COLS = [
+        c for c in X_train.columns
+        if (
+            "spread" in c.lower()
+            or "differential" in c.lower()
+            or "line" in c.lower()
+            or "predicted" in c.lower()
+        )
+    ]
+
+    X_train_win = X_train.drop(columns=LEAKY_WIN_COLS)
+    X_test_win  = X_test.drop(columns=LEAKY_WIN_COLS)
+
+    print([c for c in X_train.columns if "point" in c.lower()])
+    print([c for c in X_train.columns if "score" in c.lower()])
+    print([c for c in X_train.columns if "spread" in c.lower()])
+
+    for col in target_cols:
+        assert col not in X_train.columns, f"LEAKAGE: {col} in X_train"
+        assert col not in X_test.columns, f"LEAKAGE: {col} in X_test"
 
     y_total_train = training_data["TotalPoints"]
     y_spread_train = training_data["Spread"]
@@ -67,21 +92,37 @@ def train_model():
     y_spread_test = testing_data["Spread"]
     y_win_test = testing_data["HomeWin"]
 
-    total_model = XGBRegressor()
-    spread_model = XGBRegressor()
-    win_model = xg.XGBClassifier(objective="binary:logistic")
+    common_cols = X_train.columns.intersection(X_test.columns)
+    X_train = X_train[common_cols]
+    X_test  = X_test[common_cols]
 
-    total_model.fit(X_train, y_total_train)
-    spread_model.fit(X_train, y_spread_train)
-    win_model.fit(X_train, y_win_train)
+    common_cols_win = X_train_win.columns.intersection(X_test_win.columns)
+    X_train_win = X_train_win[common_cols_win]
+    X_test_win  = X_test_win[common_cols_win]
 
+    assert list(X_train.columns) == list(X_test.columns)
+    assert list(X_train_win.columns) == list(X_test_win.columns)
+
+    total_model = XGBRegressor(n_estimators=1000, learning_rate=.03, max_depth=4, subsample=.8, colsample_bytree=.08, eval_metric="mae", early_stopping_rounds=50)
+    spread_model = XGBRegressor(n_estimators=1000, learning_rate=.03, max_depth=4, subsample=.8, colsample_bytree=.08, eval_metric="mae", early_stopping_rounds=50)
+    win_model = xg.XGBClassifier(objective="binary:logistic", n_estimators=1000, learning_rate=.03, max_depth=4, subsample=.8, colsample_bytree=.08, eval_metric="logloss", early_stopping_rounds=50)
+
+    total_model.fit(X_train, y_total_train, eval_set=[(X_test, y_total_test)], verbose=False)
+    spread_model.fit(X_train, y_spread_train, eval_set=[(X_test, y_spread_test)], verbose=False)
+    win_model.fit(X_train_win, y_win_train, eval_set=[(X_test_win, y_win_test)], verbose=False)
+
+    pd.concat([
+        X_train_win,
+        y_win_train
+    ], axis=1).corr()["HomeWin"].sort_values(ascending=False).head(10)
 
     y_pred_total  = total_model.predict(X_test)
     y_pred_spread = spread_model.predict(X_test)
-    y_pred_win    = win_model.predict(X_test)
+    y_pred_win = win_model.predict_proba(X_test_win)[: ,1]
 
     print(f"Total MAE:  {mean_absolute_error(y_total_test, y_pred_total):.2f}")
     print(f"Spread MAE: {mean_absolute_error(y_spread_test, y_pred_spread):.2f}")
-    print(f"Win Accuracy: {accuracy_score(y_win_test, y_pred_win) * 100:.2f}%")
+    print(f"Win LogLoss: {log_loss(y_win_test, y_pred_win):.4f}")
+    print(f"Win ROC-AUC: {roc_auc_score(y_win_test, y_pred_win):.4f}")
 
-train_model()
+    return (total_model, spread_model, win_model, X_train, y_total_train, y_spread_train)

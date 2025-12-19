@@ -28,13 +28,9 @@ namespace backend.Services
 
             Directory.CreateDirectory(_exportDirectory);
 
-            var baseDir = AppContext.BaseDirectory;
-
-            var projectRoot = Directory.GetParent(baseDir)!.Parent!.Parent!.FullName;
-
             _filePath = Path.Combine(_exportDirectory, "NFL_Predictions.xlsx");
             _internalFilePath = Path.Combine(
-                projectRoot,
+                "C:\\Users\\evmil\\source\\repos\\BettingPredictions",
                 "Data",
                 "Old Data",
                 "NFL_Predictions.xlsx"

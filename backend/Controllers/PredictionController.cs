@@ -34,40 +34,39 @@ namespace backend.Controllers
         [HttpGet("gamePrediction/{eventId}")]
         public async Task<IActionResult> GetGamePrediction(string eventId)
         {
-            //var response = await _predictionService.GetPredictionDataForEventAsync(eventId);
-            // TODO: Replace this with the call above once the python predictions are good
+            var response = await _predictionService.GetPredictionsForEventAsync(eventId);
 
-            var response = new PredictionResponse
-            {
-                HomeTeamName = "Ravens",
-                AwayTeamName = "Bengals",
-                EventId = eventId,
-                Date = DateTime.Now,
-                GamePrediction = new GamePrediction
-                {
-                    SpreadPrediction = 1,
-                    SpreadRange = [1,2],
-                    SpreadConfidenceScore = 1,
-                    TotalPrediction = 1,
-                    TotalRange = [1,2],
-                    TotalConfidenceScore = 1,
-                    WinnerPrediction = "Ravens",
-                    WinnerConfidence = 1,
-                    HomeWinProbability = 1,
-                    AwayWinProbability = 0,
-                },
-                VegasLowestSpread = new VegasPrediction
-                {
-                    SportsBook = "ESPNBet",
-                    OddsValue = -12.5
-                },
-                VegasLowestTotal = new VegasPrediction
-                {
-                    SportsBook = "ESPNBet",
-                    OddsValue = -12.5
-                },
-                VegasWinner = "Ravens"
-            };
+            // var response = new PredictionResponse
+            // {
+            //     HomeTeamName = "Ravens",
+            //     AwayTeamName = "Bengals",
+            //     EventId = eventId,
+            //     Date = DateTime.Now,
+            //     GamePrediction = new GamePrediction
+            //     {
+            //         SpreadPrediction = 1,
+            //         SpreadRange = [1,2],
+            //         SpreadConfidenceScore = 1,
+            //         TotalPrediction = 1,
+            //         TotalRange = [1,2],
+            //         TotalConfidenceScore = 1,
+            //         WinnerPrediction = "Ravens",
+            //         WinnerConfidence = 1,
+            //         HomeWinProbability = 1,
+            //         AwayWinProbability = 0,
+            //     },
+            //     VegasLowestSpread = new VegasPrediction
+            //     {
+            //         SportsBook = "ESPNBet",
+            //         OddsValue = -12.5
+            //     },
+            //     VegasLowestTotal = new VegasPrediction
+            //     {
+            //         SportsBook = "ESPNBet",
+            //         OddsValue = -12.5
+            //     },
+            //     VegasWinner = "Ravens"
+            // };
 
             return Ok(response);
         }

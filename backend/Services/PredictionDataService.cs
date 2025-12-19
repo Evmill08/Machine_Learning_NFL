@@ -1,9 +1,6 @@
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using backend.enums;
 using backend.Models;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office.Word;
 
 // TODO: Fully optimize this service
 namespace backend.Services
@@ -104,6 +101,7 @@ namespace backend.Services
                 AwayTeamName = awayTeam.Team.Name,
                 HomeTeamId = homeTeam.Team.Id,
                 AwayTeamId = awayTeam.Team.Id,
+                EventId = game.Id,
                 HomeWinner = homeTeam.Winner ? 1 : 0,
                 AveragePredictedTotal = averagePredictedTotal,
                 AveragePredictedSpread = averagePredictedSpread,

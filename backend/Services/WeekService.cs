@@ -61,7 +61,7 @@ namespace backend.Services
         {
             var currentWeek = await GetWeekNumberAsync();
             var weekList = new List<Week>();
-            for (int i = 0; i < currentWeek; ++i)
+            for (int i = 1; i < currentWeek; ++i)
             {
                 var weekData = await GetWeekDataByWeekNumberAsync(currentYear, i);
                 weekList.Add(weekData);
