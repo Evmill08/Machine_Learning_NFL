@@ -84,7 +84,7 @@ namespace backend.Services
             var homeWin = homeTeam.CompetitorScore.Winner ? 1 : 0;
             var spread = homeTeam.CompetitorScore.Value - awayTeam.CompetitorScore.Value;
 
-            var (bestSpread, bestTotal) = await _oddsService.GetBestOdds(game);
+            var (bestTotal, bestSpread) = await _oddsService.GetBestOdds(game);
             var allOdds = competition.CompetitionOdds;
 
             var averagePredictedTotal = allOdds.Average(o => o.OverUnder);

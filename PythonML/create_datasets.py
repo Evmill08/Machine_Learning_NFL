@@ -21,7 +21,7 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
                                               
     df_game_stats = pd.read_excel(df_game_stats_file, sheet_name=df_game_stats_sheet)
     df_map = pd.read_excel(map_file, sheet_name='Map')
-    team_map = df_map.set_index('Abbreviation')['Team Name'].to_dict()
+    team_map = df_map.set_index('Abbreviations')['Team Name'].to_dict()
 
     # Map the abbreviations in the df itself
     df_team_stats['team_name'] = df_team_stats['team'].map(team_map)
@@ -35,17 +35,18 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
         .apply(lambda x: '_'.join(sorted(x)), axis=1)
     )
 
-    NON_FEATURE_COLS = ["season", "week", "team", "season_type", "opponent_team", "team_name", "opponent_name", "game_id", "fg_made_list", "fg_missed_list", "event_id"]
+    # Dropping these from the team data, so when we merge with game data, these wil; not be here
+    NON_FEATURE_COLS_TEAM = ["season", "week", "team", "season_type", "opponent_team", "team_name", "opponent_name", "game_id", "fg_made_list", "fg_missed_list"]
     STAT_COLS = (
         df_team_stats
-        .drop(columns=NON_FEATURE_COLS)
+        .drop(columns=NON_FEATURE_COLS_TEAM)
         .select_dtypes(include="number")
         .columns
         .tolist()
     )
 
+    # Weighted average for the data points, last 5 games have more weight
     SPAN = 5
-
     weighted_features = (
         df_team_stats
         .groupby(["season", "team"], group_keys=False)[STAT_COLS]
@@ -54,10 +55,12 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
     for col in STAT_COLS:
         df_team_stats[col] = weighted_features[col]
 
+    # Dropping the first week weighted average data
     df_team_stats = df_team_stats.dropna(subset=[f"{STAT_COLS[0]}"])
 
+    # Reverse the spread, get rid of leaked data, rename some of the columns for ease of merge
     df_game_stats['Spread'] = -df_game_stats['Spread']
-    df_game_stats = df_game_stats.drop('AwayWinner', axis=1)
+    df_game_stats = df_game_stats.drop(columns={'AwayWinner', "HomeWinner"}, axis=1)
     df_game_stats = df_game_stats.rename(columns={"SeasonYear": "season", "WeekNumber": "week"})
 
     df_game_stats['game_id'] = (
@@ -67,39 +70,64 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
         .apply(lambda x: '_'.join(sorted(x)), axis=1)
     )
 
-    # Merge the home stats 
-    home_stats = df_team_stats.merge(
-        df_game_stats,
-        left_on=['season', 'week', 'game_id', 'team_name'],
-        right_on=['season', 'week', 'game_id', 'HomeTeamName'],
-        how='inner'
+    # # Merge the home stats 
+    # home_stats = df_team_stats.merge(
+    #     df_game_stats,
+    #     left_on=['season', 'week', 'game_id', 'team_name'],
+    #     right_on=['season', 'week', 'game_id', 'HomeTeamName'],
+    #     how='inner'
+    # )
+
+    home_stats = df_game_stats.merge(
+        df_team_stats,
+        left_on=['season', 'week', 'game_id', 'HomeTeamName'],
+        right_on=['season', 'week', 'game_id', 'team_name'],
+        how='left',
     )
 
-    # Merge the away stats
-    away_stats = df_team_stats.merge(
-        df_game_stats,
-        left_on=['season', 'week', 'game_id', 'opponent_name'],
-        right_on=['season', 'week', 'game_id', 'AwayTeamName'],
-        how='inner'
-    )
+    home_stats = home_stats = home_stats.rename(columns={c: f"{c}_home" for c in STAT_COLS})
 
-    # Create properly named stats for the game to discern home and away
-    home_stats = home_stats.rename(columns={c: f"{c}_home" for c in STAT_COLS})
-    away_stats = away_stats.rename(columns={c: f"{c}_away" for c in STAT_COLS})
-
-    # Merge the home and away stats into one column
-    team_game_stats = home_stats.merge(
-        away_stats,
-        on=['season', 'week', 'game_id'],
-        how='inner'
-    )
-
-    # Merge the total game stats into the game data 
-    final_df = df_game_stats.merge(
-        team_game_stats,
-        on=['season', 'week', 'game_id'],
+    away_stats = df_game_stats.merge(
+        df_team_stats,
+        left_on=['season', 'week', 'game_id', 'AwayTeamName'],
+        right_on=['season', 'week', 'game_id', 'team_name'],
         how='left'
     )
+
+    away_stats = away_stats = away_stats.rename(columns={c: f"{c}_away" for c in STAT_COLS})
+
+    final_df = home_stats.merge(
+        away_stats[['season', 'week', 'game_id'] + [f"{c}_away" for c in STAT_COLS]],
+        on=['season', 'week', 'game_id'],
+        how='left',
+    )
+
+
+    # # Merge the away stats
+    # away_stats = df_team_stats.merge(
+    #     df_game_stats,
+    #     left_on=['season', 'week', 'game_id', 'opponent_name'],
+    #     right_on=['season', 'week', 'game_id', 'AwayTeamName'],
+    #     how='inner'
+    # )
+
+    # # Create properly named stats for the game to discern home and away
+    # home_stats = home_stats.rename(columns={c: f"{c}_home" for c in STAT_COLS})
+    # away_stats = away_stats.rename(columns={c: f"{c}_away" for c in STAT_COLS})
+
+    # # Merge the home and away stats into one column
+    # team_game_stats = home_stats.merge(
+    #     away_stats,
+    #     on=['season', 'week', 'game_id'],
+    #     how='inner'
+    # )
+
+    # # Merge the total game stats into the game data 
+    # final_df = df_game_stats.merge(
+    #     team_game_stats,
+    #     on=['season', 'week', 'game_id'],
+    #     how='left'
+    # )
 
     # ========================
     # 7. Save as CSV

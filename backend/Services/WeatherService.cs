@@ -72,7 +72,7 @@ namespace backend.Services
                     $"relative_humidity_2m_mean,wind_gusts_10m_mean,wind_speed_10m_mean";
             }
 
-            var dto = await _httpClient.GetFromJsonAsync<WeatherDto>(url)
+            var dto = await _httpClient.GetFromJsonResilientAsync<WeatherDto>(url)
                     ?? throw new Exception("Failed to deserialize Open-Meteo archive response.");
 
             if (dto.WeatherData == null)
