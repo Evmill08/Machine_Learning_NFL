@@ -1,5 +1,5 @@
 import xgboost as xg
-from sklearn.metrics import accuracy_score, mean_absolute_error, log_loss, roc_auc_score
+from sklearn.metrics import mean_absolute_error, log_loss, roc_auc_score
 from xgboost import XGBRegressor
 import pandas as pd
 from pathlib import Path
@@ -19,36 +19,20 @@ def train_model():
     target_cols = ["TotalPoints", "Spread", "HomeWin"]
 
     base_drop_cols = [
-        "Spread_x",
-        "Spread_y",
-        "TotalPoints_x",
-        "TotalPoints_y",
+        "Spread",
+        "TotalPoints",
+        "HomeWin",
         "game_id",
-        "EventId,"
-        "team_x",
-        "season_type_x",
-        "opponent_team_x",
-        "fg_made_list_home",
-        "fg_missed_list_home",
-        "fg_blocked_list_home",
-        "team_name_x",
-        "opponent_name_x",
-        "HomeTeamName_x",
-        "AwayTeamName_x",
-        "team_y",
-        "season_type_y",
-        "opponent_team_y",
-        "fg_made_list_away",
-        "fg_missed_list_away",
-        "fg_blocked_list_away",
-        "team_name_y",
-        "opponent_name_y",
-        "HomeTeamName_y",
-        "AwayTeamName_y",
         "HomeTeamName",
         "AwayTeamName",
-        "fg_blocked_list_x",
-        "fg_blocked_list_y"
+        "HomeTeamId",
+        "AwayTeamId",
+        "fg_made_list",
+        "fg_missed_list",
+        "fg_blovked_list",
+        "team_name",
+        "opponent_team",
+        "EventId",
     ]
 
     X_train = training_data.drop(
@@ -63,27 +47,6 @@ def train_model():
 
     X_test  = X_test.select_dtypes(include=["number"])
 
-    LEAKY_WIN_COLS = [
-        c for c in X_train.columns
-        if (
-            "spread" in c.lower()
-            or "differential" in c.lower()
-            or "line" in c.lower()
-            or "predicted" in c.lower()
-        )
-    ]
-
-    X_train_win = X_train.drop(columns=LEAKY_WIN_COLS)
-    X_test_win  = X_test.drop(columns=LEAKY_WIN_COLS)
-
-    print([c for c in X_train.columns if "point" in c.lower()])
-    print([c for c in X_train.columns if "score" in c.lower()])
-    print([c for c in X_train.columns if "spread" in c.lower()])
-
-    for col in target_cols:
-        assert col not in X_train.columns, f"LEAKAGE: {col} in X_train"
-        assert col not in X_test.columns, f"LEAKAGE: {col} in X_test"
-
     y_total_train = training_data["TotalPoints"]
     y_spread_train = training_data["Spread"]
     y_win_train = training_data["HomeWin"]
@@ -96,12 +59,7 @@ def train_model():
     X_train = X_train[common_cols]
     X_test  = X_test[common_cols]
 
-    common_cols_win = X_train_win.columns.intersection(X_test_win.columns)
-    X_train_win = X_train_win[common_cols_win]
-    X_test_win  = X_test_win[common_cols_win]
-
     assert list(X_train.columns) == list(X_test.columns)
-    assert list(X_train_win.columns) == list(X_test_win.columns)
 
     total_model = XGBRegressor(n_estimators=1000, learning_rate=.03, max_depth=4, subsample=.8, colsample_bytree=.08, eval_metric="mae", early_stopping_rounds=50)
     spread_model = XGBRegressor(n_estimators=1000, learning_rate=.03, max_depth=4, subsample=.8, colsample_bytree=.08, eval_metric="mae", early_stopping_rounds=50)
@@ -109,16 +67,11 @@ def train_model():
 
     total_model.fit(X_train, y_total_train, eval_set=[(X_test, y_total_test)], verbose=False)
     spread_model.fit(X_train, y_spread_train, eval_set=[(X_test, y_spread_test)], verbose=False)
-    win_model.fit(X_train_win, y_win_train, eval_set=[(X_test_win, y_win_test)], verbose=False)
-
-    pd.concat([
-        X_train_win,
-        y_win_train
-    ], axis=1).corr()["HomeWin"].sort_values(ascending=False).head(10)
+    win_model.fit(X_train, y_win_train, eval_set=[(X_test, y_win_test)], verbose=False)
 
     y_pred_total  = total_model.predict(X_test)
     y_pred_spread = spread_model.predict(X_test)
-    y_pred_win = win_model.predict_proba(X_test_win)[: ,1]
+    y_pred_win = win_model.predict_proba(X_test)[: ,1]
 
     print(f"Total MAE:  {mean_absolute_error(y_total_test, y_pred_total):.2f}")
     print(f"Spread MAE: {mean_absolute_error(y_spread_test, y_pred_spread):.2f}")

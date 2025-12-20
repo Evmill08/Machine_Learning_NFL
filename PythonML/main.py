@@ -1,11 +1,9 @@
 from fastapi import FastAPI
 import pandas as pd
 import numpy as np
-from model_training import train_model  
+from model_training import train_model
 from prediction_data import PredictionData
 from pathlib import Path
-
-
 
 app = FastAPI()
 
@@ -20,6 +18,7 @@ def compute_95CI(pred, residuals):
 def make_prediction(predictionData: PredictionData, model_dict=None):
     print("Predictions started")
     print(predictionData)
+
     # Convert PredictionData to DataFrame
     data_dict = predictionData.model_dump()
     prediction_data_df = pd.DataFrame.from_dict(data_dict, orient="index", columns=["Value"])
@@ -37,6 +36,8 @@ def make_prediction(predictionData: PredictionData, model_dict=None):
 
     home_stats = team_stats_df[team_stats_df["HomeTeamName"] == home_team_name].iloc[-1].filter(like="_home")
     away_stats = team_stats_df[team_stats_df["AwayTeamName"] == away_team_name].iloc[-1].filter(like="_away")
+    home_stats['season'] = team_stats_df['season']
+    home_stats['week'] = team_stats_df['week']
 
     # Merge all features
     features_df = pd.DataFrame({**prediction_data_df.set_index("Property")["Value"].to_dict(),
@@ -57,13 +58,11 @@ def make_prediction(predictionData: PredictionData, model_dict=None):
     # Align feature columns
     common_cols = X_train.columns.intersection(features_df.columns)
     X_features_total = features_df[common_cols]
-    X_features_total = X_features_total.drop(columns={"HomeTeamId", "AwayTeamId"})
-    X_features_win = X_features_total  # Use same features for now; can drop leaky columns if needed
 
     # Make predictions
     total_pred = float(total_model.predict(X_features_total)[0])
     spread_pred = float(spread_model.predict(X_features_total)[0])
-    win_prob = float(win_model.predict_proba(X_features_win)[0,1])
+    win_prob = float(win_model.predict_proba(X_features_total)[0,1])
 
     # Compute residuals from training set
     residuals_total = y_total_train.values - total_model.predict(X_train)

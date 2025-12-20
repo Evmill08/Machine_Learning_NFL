@@ -36,7 +36,7 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
     )
 
     # Dropping these from the team data, so when we merge with game data, these wil; not be here
-    NON_FEATURE_COLS_TEAM = ["season", "week", "team", "season_type", "opponent_team", "team_name", "opponent_name", "game_id", "fg_made_list", "fg_missed_list"]
+    NON_FEATURE_COLS_TEAM = ["season", "week", "team", "season_type", "opponent_team", "team_name", "opponent_name", "game_id", "fg_made_list", "fg_missed_list", "fg_blocked_list"]
     STAT_COLS = (
         df_team_stats
         .drop(columns=NON_FEATURE_COLS_TEAM)
