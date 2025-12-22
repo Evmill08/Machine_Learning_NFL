@@ -7,7 +7,8 @@ namespace backend.Services
 {
     public interface IGameDataService
     {
-        public Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync();
+        public Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync(int weekNumber);
+        public Task<int> GetCurrentWeekAsync();
     }
 
     public class GameDataService : IGameDataService
@@ -23,12 +24,11 @@ namespace backend.Services
             _eventService = eventService;
         }
 
-        public async Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync()
+        public async Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync(int weekNumber)
         {
-            var currentWeekNumber = await _weeksService.GetWeekNumberAsync();
             var currentYear = DateTime.Now.Year;
 
-            var currentWeek = await _weeksService.GetWeekByWeekNumberAsync(currentYear, currentWeekNumber);
+            var currentWeek = await _weeksService.GetWeekByWeekNumberAsync(currentYear, weekNumber);
 
             var eventsResponse = await _httpClient.GetFromJsonResilientAsync<EventsResponseDto>(currentWeek.EventRefs.Ref)
                 ?? throw new Exception("Error fetching events for current week");
@@ -40,6 +40,12 @@ namespace backend.Services
 
             var gameDataResults = await Task.WhenAll(gameDataTasks);
             return gameDataResults.SelectMany(g => g);
+        }
+
+        public async Task<int> GetCurrentWeekAsync()
+        {
+            var currentWeekNumber = await _weeksService.GetWeekNumberAsync();
+            return currentWeekNumber;
         }
     }
 }

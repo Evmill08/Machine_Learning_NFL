@@ -16,10 +16,17 @@ namespace backend.Controllers
             _gameDataService = gameDataService;
         }
 
-        [HttpGet("currentWeekGames")]
-        public async Task<IActionResult> GetCurrentWeekGames()
+        [HttpGet("currentWeekGames/{weekNumber}")]
+        public async Task<IActionResult> GetCurrentWeekGames(int weekNumber)
         {
-            var response = await _gameDataService.GetGameDataForCurrentWeekAsync();
+            var response = await _gameDataService.GetGameDataForCurrentWeekAsync(weekNumber);
+            return Ok(response);
+        }
+
+        [HttpGet("currentWeek")]
+        public async Task<IActionResult> GetCurrentWeek()
+        {
+            var response = await _gameDataService.GetCurrentWeekAsync();
             return Ok(response);
         }
     }

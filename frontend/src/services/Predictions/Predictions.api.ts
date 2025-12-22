@@ -2,7 +2,7 @@
 // This is our most expensive function, need to think about how we want to
 // handle loadin this as fast as possible.
 
-import { PredictionData } from "../models/PredictionData";
+import { PredictionData } from "../../models/PredictionData";
 
 export async function GetGamePrediction(eventId: string): Promise<PredictionData | undefined>{
     const url = `http://localhost:5145/prediction/gamePrediction/${eventId}`;
