@@ -1,9 +1,9 @@
 import React from 'react';
-import './App.css';
-import { MainPageExample } from "./MainPageExample";  
+import { HomePage } from './pages/Home';
 import { persistQueryClient } from "@tanstack/query-persist-client-core";
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'; 
 import { queryClient } from "./services/queryClient";
+import { QueryClientProvider } from '@tanstack/react-query';
 
 persistQueryClient({
   queryClient,
@@ -14,9 +14,9 @@ persistQueryClient({
 
 function App() {
   return (
-    <div className="App">
-      <MainPageExample />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <HomePage />
+    </QueryClientProvider>
   );
 }
 

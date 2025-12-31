@@ -5,7 +5,7 @@ export const oddsQueryKeys = {
     eventId: (eventId: string) =>  [...oddsQueryKeys.all, eventId] as const,
 };
 
-export const gamesQueryOptions = (eventId: string) => ({
+export const gameOddsQueryOptions = (eventId: string) => ({
     queryKey: oddsQueryKeys.eventId(eventId),
     queryFn: () => GetGameOdds(eventId),
     staleTime: 1000 * 60 * 60,  // odds data is considered fresh for 1 hour

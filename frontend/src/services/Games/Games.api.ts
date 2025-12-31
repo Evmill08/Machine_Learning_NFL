@@ -4,14 +4,16 @@ export async function GetCurrentWeekNumber(): Promise<number | null> {
     const url = `http://localhost:5145/game/currentWeek`;
 
     try {
-        const gameResponse = await fetch(url);
+        const currentWeekResponse = await fetch(url);
+        console.log("currentWeekResponse: ", currentWeekResponse);
 
-        if (!gameResponse.ok){
-            throw new Error(`HTTP Error. Status ${gameResponse.status}`);
+        if (!currentWeekResponse.ok){
+            throw new Error(`HTTP Error. Status ${currentWeekResponse.status}`);
         }
 
-        const gameData: number = await gameResponse.json();
-        return gameData;
+        const currentWeekNumber: number = await currentWeekResponse.json();
+        console.log("currentWeekNumber: ", currentWeekNumber);
+        return currentWeekNumber;
 
     } catch (error){
         console.error("Error fetching users: ", error);
@@ -19,14 +21,15 @@ export async function GetCurrentWeekNumber(): Promise<number | null> {
     }
 }
 
-export async function GetGameData(week: number): Promise<GameData[]>{
-    const url = `http://localhost:5145/game/currentWeekGames`;
-    
-    const gameResponse = await fetch(url);
+export async function GetGameData(week: number){    
+    console.log("Getting games...");
+    const gameResponse = await fetch(`/game/currentWeekGames/${week}`);
 
     if (!gameResponse.ok){
         throw new Error(`HTTP Error. Status ${gameResponse.status}`);
     }
 
-    return gameResponse.json();
+    const gameData = await gameResponse.json();
+    console.log("gameData: ", gameData);
+    return gameData;
 }

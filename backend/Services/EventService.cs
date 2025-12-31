@@ -13,7 +13,7 @@ namespace backend.Services
         public Task<Event> GetEventByRefAsync(RefDto eventRef);
         public Task<IEnumerable<Event>> GetEventsForCurrentWeek(int seasonYear);
         public Task<IEnumerable<GameData>> GetGameDataByEventRef(RefDto eventRef, int seasonNumber);
-        public Task<Event> GetEventByIdAsync(string eventID);
+        public Task<Event> GetEventByIdAsync(string eventId);
     }
 
     public class EventService : IEventService
@@ -184,11 +184,11 @@ namespace backend.Services
             };
         }
 
-        public async Task<Event> GetEventByIdAsync(string eventID)
+        public async Task<Event> GetEventByIdAsync(string eventId)
         {
             var eventRef = new RefDto
             {
-                Ref = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/{eventID}?lang=en&region=us"
+                Ref = $"http://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/{eventId}?lang=en&region=us"
             };
 
             return await GetEventByRefAsync(eventRef);
@@ -237,7 +237,7 @@ namespace backend.Services
                 {
                     HomeTeamName = homeTeam.Name,
                     AwayTeamName = awayTeam.Name,
-                    HomeTeamID = homeTeam.Id,
+                    HomeTeamId = homeTeam.Id,
                     AwayTeamId = awayTeam.Id,
                     EventId = eventResponse.Id,
                     Date = date

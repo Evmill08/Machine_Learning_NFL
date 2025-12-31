@@ -1,4 +1,4 @@
-import { GetGameData, GetCurrentWeekNumber } from "./Games.api";
+import { GetGameData } from "./Games.api";
 
 export const gamesQueryKeys = {
     all: ["games"] as const,

@@ -1,8 +1,4 @@
-// TODO: Cache and run on app launch 
-
-import { GameOdds } from "../../models/GameOdds";
-
-export async function GetGameOdds(eventId: string): Promise<GameOdds[]>{
+export async function GetGameOdds(eventId: string){
     var url = `http://localhost:5145/odds/allOdds/${eventId}`;
 
     const oddsResponse = await fetch(url);
