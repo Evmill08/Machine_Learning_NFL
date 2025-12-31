@@ -21,7 +21,7 @@ export async function GetCurrentWeekNumber(): Promise<number | null> {
     }
 }
 
-export async function GetGameData(week: number){    
+export async function GetWeeklyGameData(week: number){    
     console.log("Getting games...");
     const gameResponse = await fetch(`/game/currentWeekGames/${week}`);
 
@@ -33,3 +33,4 @@ export async function GetGameData(week: number){
     console.log("gameData: ", gameData);
     return gameData;
 }
+

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using backend.DTOs;
 using backend.Models;
 using backend.Utilities;
@@ -8,6 +9,7 @@ namespace backend.Services
     public interface IGameDataService
     {
         public Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync(int weekNumber);
+        public Task<GameData> GetGameDataByEventId(string eventId);
         public Task<int> GetCurrentWeekAsync();
     }
 
@@ -42,10 +44,33 @@ namespace backend.Services
             return gameDataResults.SelectMany(g => g);
         }
 
+        public async Task<GameData> GetGameDataByEventId(string eventId)
+        {
+            var game = await _eventService.GetEventByIdAsync(eventId);
+            return GetGameDataFromEvent(game);
+        }
+
         public async Task<int> GetCurrentWeekAsync()
         {
             var currentWeekNumber = await _weeksService.GetWeekNumberAsync();
             return currentWeekNumber;
+        }
+
+        private static GameData GetGameDataFromEvent(Event e)
+        {
+            var comp = e.Competitions.FirstOrDefault();
+            var homeTeam = comp.Competitors.FirstOrDefault(team => team.HomeAway == "home");
+            var awayTeam = comp.Competitors.FirstOrDefault(team => team.HomeAway == "away");
+
+            return new GameData
+            {
+                HomeTeamName = homeTeam.Team.DisplayName,
+                HomeTeamId = homeTeam.Team.Id,
+                AwayTeamId = awayTeam.Team.Id,
+                AwayTeamName = awayTeam.Team.DisplayName,
+                EventId = e.Id,
+                Date = e.Date,
+            };
         }
     }
 }

@@ -29,5 +29,12 @@ namespace backend.Controllers
             var response = await _gameDataService.GetCurrentWeekAsync();
             return Ok(response);
         }
+
+        [HttpGet("{eventId}")]
+        public async Task<IActionResult> GetGameByEventId(string eventId)
+        {
+            var response = await _gameDataService.GetGameDataByEventId(eventId);
+            return Ok(response);
+        }
     }
 }

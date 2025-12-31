@@ -17,7 +17,7 @@ namespace backend.Controllers
         [HttpGet("allOdds/{eventId}")]
         public async Task<IActionResult> GetBestOddsForGameAysnc(string eventId)
         {
-            var response = _oddsService.GetOddsByEventId(eventId);
+            var response = await _oddsService.GetOddsByEventId(eventId);
             return Ok(response);
         }
     }

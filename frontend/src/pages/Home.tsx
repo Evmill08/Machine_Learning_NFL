@@ -8,7 +8,7 @@ import styles from "../css/home.module.css"
 export function HomePage() {
     const [weekNumber, setWeekNumber] = useState<number | null>(null);
 
-    // TODO: Getting a weird error in the network from this
+    // TODO: Fix this, cache the week number
     useEffect(() => {
         const loadWeekNumber = async () => {
             try {
@@ -23,6 +23,8 @@ export function HomePage() {
         loadWeekNumber();
     }, []);
 
+    // TODO: When the home page is loaded, we should IMMEDIATLY be getting predictions for 2-4 games at a time in batches
+    // Need to figure out how to do this. 
     const {data: weeklyGames, isLoading, error} = useGames(weekNumber);
 
     if (weeklyGames){

@@ -1,0 +1,7 @@
+.selectedTab{
+    background-color: crimson;
+}
+
+.unselectedTab{
+    background-color: blue;
+}

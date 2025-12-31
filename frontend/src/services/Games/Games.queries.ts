@@ -1,4 +1,4 @@
-import { GetGameData } from "./Games.api";
+import { GetWeeklyGameData } from "./Games.api";
 
 export const gamesQueryKeys = {
     all: ["games"] as const,
@@ -7,7 +7,7 @@ export const gamesQueryKeys = {
 
 export const gamesQueryOptions = (week: number) => ({
     queryKey: gamesQueryKeys.week(week),
-    queryFn: () => GetGameData(week),
+    queryFn: () => GetWeeklyGameData(week),
     staleTime: 1000 * 60 * 60 * 24 * 6, // Game data is considered fresh for 6 days
     cacheTime: 1000 * 60 * 60 * 24 * 14 // Game data is stored in memory for 14
 });
