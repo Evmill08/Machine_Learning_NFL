@@ -10,7 +10,7 @@ export const predictionQueryKeys = {
 
 export const predictionQueryOptions = (eventId: string) => ({
     queryKey: predictionQueryKeys.eventId(eventId),
-    queryfn: () => GetGamePrediction(eventId), 
+    queryFn: () => GetGamePrediction(eventId), 
     staleTime: 1000 * 60 * 60,  // prediction data is considered fresh for 1 hour
     cacheTime: 1000 * 60 * 60 * 2 // prediction data is stored in memory for 2 hours 
 })

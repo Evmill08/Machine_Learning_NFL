@@ -1,6 +1,6 @@
 export interface GameOdds{
     details: string;
-    total: number
+    overUnder: number
     spread: number;
     provider: string;
 }

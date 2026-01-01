@@ -1,10 +1,11 @@
 import { useState } from "react";
-import GameOddsComponent from "../components/gameOddsComponent";
 import styles from "../css/gameDetails.module.css";
 import { useGame } from "../hooks/useGame";
 import { TeamLogos } from "../models/TeamLogos";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
-import GamePredictionComponent from "../components/gamePredictionComponent";
+import {useParams, useNavigate } from "react-router-dom";
+import GamePredictionTabComponent from "../components/gamePredictionTabComponent";
+import GameOddsTabComponent from "../components/gameOddsTabComponent";
+import { usePredictions } from "../hooks/useGamePredictions";
 
 // Essentially 2 tabs on this page
 export function GameDetails() {
@@ -12,11 +13,12 @@ export function GameDetails() {
     const navigate = useNavigate();
     const [oddsTabSelected, setOddsTabSelected] = useState(true);
 
-    const {data: gameData, isLoading, error} = useGame(eventId);
+    const {data: gameData, isLoading: isGameLoading, error: gameError} = useGame(eventId);
+    const {data: gamePrediction, isLoading: isPredictionLoading, error: predictionError} = usePredictions(eventId);
 
     // Again need to think about loading and errors more
-    if (isLoading) return <div>Loading games...</div>;
-    if (error) return <div>Error loading games</div>;
+    if (isGameLoading) return <div>Loading games...</div>;
+    if (gameError) return <div>Error loading games</div>;
 
     return (
         <div className={styles.gameDetailsContainer}>
@@ -45,11 +47,12 @@ export function GameDetails() {
                 </div>
 
                 {/* The actual content which is changed based on what is pressed  */}
+                {/* We need to IMMEDIATLY try and load the predictions since this call takes a long time */}
                 <div className={styles.shownContent}>
                     {oddsTabSelected ? (
-                        <GameOddsComponent eventId={eventId}/>
+                        <GameOddsTabComponent eventId={eventId}/>
                     ) : (
-                        <GamePredictionComponent eventId={eventId}/>
+                        <GamePredictionTabComponent eventId={eventId}/>
                     )}
                 </div>
             </div>

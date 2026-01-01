@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace backend.Models
+namespace backend.DTOs
 {
     public class GamePrediction
     {

@@ -44,6 +44,7 @@ namespace backend.Services
                 Details = o.Details,
                 OverUnder = o.OverUnder,
                 Spread = o.Spread,
+                Provider = o.Provider.SportsBook,
             }).ToList();
 
             return allOdds;

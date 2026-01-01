@@ -7,5 +7,8 @@ export async function GetGameOdds(eventId: string){
         throw new Error(`HTTP Error. Status ${oddsResponse.status}`);
     }
 
-    return await oddsResponse.json();
+    const oddsResponseJson = await oddsResponse.json();
+    console.log("Odds Response: ", oddsResponseJson);
+
+    return oddsResponseJson;
 }

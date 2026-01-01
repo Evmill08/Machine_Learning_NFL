@@ -6,7 +6,7 @@ namespace backend.Models
         public string AwayTeamName {get; set;} // probably dont need these for front end
         public string EventId { get; set; }
         public DateTime Date { get; set; }
-        public GamePrediction GamePrediction { get; set; }
+        public GamePredictionResponse GamePrediction { get; set; }
         public VegasPrediction VegasLowestSpread { get; set; }
         public VegasPrediction VegasLowestTotal { get; set; }
         public string VegasWinner { get; set; } 

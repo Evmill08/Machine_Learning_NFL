@@ -6,6 +6,7 @@ import { PredictionData } from "../../models/PredictionData";
 
 export async function GetGamePrediction(eventId: string){
     const url = `http://localhost:5145/prediction/gamePrediction/${eventId}`;
+    console.log("Hitting backend prediction endpoint");
 
     try {
         const predictionResponse = await fetch(url);
@@ -15,6 +16,7 @@ export async function GetGamePrediction(eventId: string){
         }
 
         const predictionData: PredictionData = await predictionResponse.json();
+        console.log("Prediction data: ", predictionData);
         return predictionData;
 
     } catch (error){

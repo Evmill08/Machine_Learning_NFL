@@ -26,6 +26,7 @@ export function HomePage() {
     // TODO: When the home page is loaded, we should IMMEDIATLY be getting predictions for 2-4 games at a time in batches
     // Need to figure out how to do this. 
     const {data: weeklyGames, isLoading, error} = useGames(weekNumber);
+    console.log("We hit use games");
 
     if (weeklyGames){
         (weeklyGames as GameData[])
@@ -35,6 +36,8 @@ export function HomePage() {
             return time_a.getHours() - time_b.getHours();
         })
     }
+
+    console.log(weeklyGames);
 
     if (isLoading) return <div>Loading games...</div>;
     if (error) return <div>Error loading games</div>;

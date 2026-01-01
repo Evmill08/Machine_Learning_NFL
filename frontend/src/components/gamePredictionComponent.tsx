@@ -1,4 +1,4 @@
-import { GameDetailsComponentProps } from "./gameOddsComponent";
+import { GameDetailsComponentProps } from "./gameOddsTabComponent";
 
 export function GamePredictionComponent ({eventId}: GameDetailsComponentProps) {
 

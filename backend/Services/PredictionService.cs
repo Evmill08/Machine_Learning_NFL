@@ -81,7 +81,16 @@ namespace backend.Services
                                 AwayTeamName = predictionData.AwayTeamName,
                                 EventId = e.Id,
                                 Date = e.Date,
-                                GamePrediction = result,
+                                GamePrediction = new GamePredictionResponse
+                                {
+                                    SpreadPrediction = result.SpreadPrediction,
+                                    SpreadRange = result.SpreadRange,
+                                    TotalPrediction = result.TotalPrediction,
+                                    TotalRange = result.TotalRange,
+                                    WinnerPrediction = result.WinnerPrediction,
+                                    HomeWinProbability = result.HomeWinProbability,
+                                    AwayWinProbability = result.AwayWinProbability
+                                },
                                 VegasLowestSpread = bestSpread,
                                 VegasLowestTotal = bestTotal,
                                 VegasWinner = bestSpread.OddsValue < 0 ? "Home" : "Away",
@@ -148,7 +157,16 @@ namespace backend.Services
                                 AwayTeamName = prediction.Item2.AwayTeamName,
                                 EventId = prediction.e.Id,
                                 Date = prediction.e.Date,
-                                GamePrediction = result,
+                                GamePrediction = new GamePredictionResponse
+                                {
+                                    SpreadPrediction = result.SpreadPrediction,
+                                    SpreadRange = result.SpreadRange,
+                                    TotalPrediction = result.TotalPrediction,
+                                    TotalRange = result.TotalRange,
+                                    WinnerPrediction = result.WinnerPrediction,
+                                    HomeWinProbability = result.HomeWinProbability,
+                                    AwayWinProbability = result.AwayWinProbability
+                                },
                                 VegasLowestSpread = bestSpread,
                                 VegasLowestTotal = bestTotal,
                                 VegasWinner = bestSpread.OddsValue < 0 ? "Home" : "Away",
@@ -242,13 +260,10 @@ namespace backend.Services
                 if (gp != null)
                 {
                     worksheet.Cell(row, 7).Value = gp.SpreadPrediction;
-                    worksheet.Cell(row, 8).Value = gp.SpreadConfidenceScore;
-                    worksheet.Cell(row, 9).Value = gp.TotalPrediction;
-                    worksheet.Cell(row, 10).Value = gp.TotalConfidenceScore;
-                    worksheet.Cell(row, 11).Value = gp.WinnerPrediction;
-                    worksheet.Cell(row, 12).Value = gp.WinnerConfidence;
-                    worksheet.Cell(row, 13).Value = gp.HomeWinProbability;
-                    worksheet.Cell(row, 14).Value = gp.AwayWinProbability;
+                    worksheet.Cell(row, 8).Value = gp.TotalPrediction;
+                    worksheet.Cell(row, 9).Value = gp.WinnerPrediction;
+                    worksheet.Cell(row, 10).Value = gp.HomeWinProbability;
+                    worksheet.Cell(row, 11).Value = gp.AwayWinProbability;
                 }
 
                 row++;

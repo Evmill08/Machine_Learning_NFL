@@ -28,7 +28,8 @@ namespace backend.Services
 
         public async Task<IEnumerable<GameData>> GetGameDataForCurrentWeekAsync(int weekNumber)
         {
-            var currentYear = DateTime.Now.Year;
+            // This is a stupid way to fix this but since it just turned to 2026, this breaks things
+            var currentYear = DateTime.Now.Year - 1;
 
             var currentWeek = await _weeksService.GetWeekByWeekNumberAsync(currentYear, weekNumber);
 
