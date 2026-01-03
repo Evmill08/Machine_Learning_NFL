@@ -102,8 +102,11 @@ C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compress
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\wa8k6bdmmp-xtmec1yjym.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\qs26i588hn-9mdor4erlc.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\btmfp5snku-wt2epjwarw.gz
-C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\8p510ahlje-707tus5h00.gz
-C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\0yulyb0yu6-4jarh00dq7.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\3ifjedebo6-8v6mlne2lh.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\aog24bmkg9-9mdor4erlc.gz
 C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\shluh04tzk-0uh76ijbbo.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\8p510ahlje-hoo5btqloz.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\0yulyb0yu6-zm0ac4anko.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\a8ndgznpfr-ln730e73sr.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\b3xp487gq7-9mdor4erlc.gz
+C:\Users\evmil\source\repos\BettingPredictions\backend\obj\Debug\net9.0\compressed\c9pox4apco-82u1xzutmf.gz

@@ -5,7 +5,7 @@ import { TeamLogos } from "../models/TeamLogos";
 import {useParams, useNavigate } from "react-router-dom";
 import GamePredictionTabComponent from "../components/gamePredictionTabComponent";
 import GameOddsTabComponent from "../components/gameOddsTabComponent";
-import { usePredictions } from "../hooks/useGamePredictions";
+import { usePrediction } from "../hooks/useGamePrediction";
 
 // Essentially 2 tabs on this page
 export function GameDetails() {
@@ -14,7 +14,7 @@ export function GameDetails() {
     const [oddsTabSelected, setOddsTabSelected] = useState(true);
 
     const {data: gameData, isLoading: isGameLoading, error: gameError} = useGame(eventId);
-    const {data: gamePrediction, isLoading: isPredictionLoading, error: predictionError} = usePredictions(eventId);
+    const {data: gamePrediction, isLoading: isPredictionLoading, error: predictionError} = usePrediction(eventId);
 
     // Again need to think about loading and errors more
     if (isGameLoading) return <div>Loading games...</div>;

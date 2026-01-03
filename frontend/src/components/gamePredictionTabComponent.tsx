@@ -1,21 +1,13 @@
-import { usePredictions } from "../hooks/useGamePredictions";
+import { usePrediction } from "../hooks/useGamePrediction";
 import { GameDetailsComponentProps } from "./gameOddsTabComponent";
 import {PredictionData } from "../models/PredictionData";
+import GamePredictionComponent from "./gamePredictionComponent";
 
 export function GamePredictionTabComponent({eventId}: GameDetailsComponentProps) {
-    const {data, isLoading, error} = usePredictions(eventId);
 
-    if (isLoading && !data){
-        return <div>Loading Prediction</div>
-    }
-
-    const gamePrediction = data as PredictionData;
-    console.log("GamePrediction data: ", gamePrediction);
     return (
         <div>
-            <h1>Predicted Winner: {gamePrediction.gamePrediction.winnerPrediction}</h1>
-            <h1>Predicted Spread: {gamePrediction.gamePrediction.spreadPrediction}</h1>
-            <h1>Predicted Total: {gamePrediction.gamePrediction.totalPrediction}</h1>
+            <GamePredictionComponent eventId={eventId}/>
         </div>
     )
 

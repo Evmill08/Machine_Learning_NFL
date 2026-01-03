@@ -1,7 +1,7 @@
 //TODO: Think about abstracting this for game odds too
 // Have to think a little more about if we really want to cache them for the same amount of time
 
-import { GetGamePrediction } from "./Predictions.api";
+import { GetGamePrediction } from "./Prediction.api";
 
 export const predictionQueryKeys = {
     all: ["predictions"] as const,

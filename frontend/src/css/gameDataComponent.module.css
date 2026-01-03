@@ -3,14 +3,20 @@
     border-radius: 10px;
     padding: 2.5%;
     width: 100%;
-    transition: all 0.2s ease-in-out;
+    transition: background-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .gameContainer:hover {
-    background-color: #3d415e; 
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); 
-    transform: scale(1.05); 
+    background-color: #3d415e;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.gameContainer:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .teamContainer {

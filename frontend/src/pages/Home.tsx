@@ -4,9 +4,14 @@ import { useGames } from '../hooks/useGames';
 import { GameData } from '../models/GameData';
 import GameDataComponent from '../components/gameDataComponent';
 import styles from "../css/home.module.css"
+import { useNavigate } from 'react-router-dom';
+import { usePrediction } from '../hooks/useGamePrediction';
+import { useQueryClient } from '@tanstack/react-query';
+import { predictionQueryOptions } from '../services/Prediction/Prediction.queries.api';
 
 export function HomePage() {
     const [weekNumber, setWeekNumber] = useState<number | null>(null);
+    const queryClient = useQueryClient();
 
     // TODO: Fix this, cache the week number
     useEffect(() => {
@@ -23,9 +28,9 @@ export function HomePage() {
         loadWeekNumber();
     }, []);
 
-    // TODO: When the home page is loaded, we should IMMEDIATLY be getting predictions for 2-4 games at a time in batches
-    // Need to figure out how to do this. 
-    const {data: weeklyGames, isLoading, error} = useGames(weekNumber);
+    const navigate = useNavigate();
+
+    const {data: weeklyGames, isLoading, error} = useGames(weekNumber!);
     console.log("We hit use games");
 
     if (weeklyGames){
@@ -37,7 +42,15 @@ export function HomePage() {
         })
     }
 
-    console.log(weeklyGames);
+    useEffect(() => {
+        if (!weeklyGames) return;
+
+        weeklyGames.forEach((game: GameData) => {
+            queryClient.prefetchQuery(
+                predictionQueryOptions(game.eventId)
+            );
+        });
+    }, [weeklyGames, queryClient]);
 
     if (isLoading) return <div>Loading games...</div>;
     if (error) return <div>Error loading games</div>;
@@ -65,7 +78,6 @@ export function HomePage() {
                 <div>Error loading games</div>
             )}*/}
             
-
             <ul>
                 <div className={styles.gameGrid} >
                     {weeklyGames?.map((g: GameData) => (
@@ -74,7 +86,11 @@ export function HomePage() {
                     ))}
                 </div>
             </ul>
+
+            <div className={styles.predictionButtonContainer}>
+                <button className={styles.predictionButton} onClick={() => navigate(`/predictions/${weekNumber}`)}>View All Predictions</button>
+                <h1 className={styles.predictionDisclaimer}>Disclaimer: Viewing all predictions may take up to 2 minutes. Please be patient while we load the predictions!</h1>
+            </div>
         </div>
     );
-
 }
