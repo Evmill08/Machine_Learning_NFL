@@ -1,0 +1,104 @@
+.gamePredictionContainer {
+    background-color: #2D3047;
+    border-radius: 10px;
+    padding: 0;
+    width: 100%;          
+    max-width: none;     
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #FDE8E9;
+    transition: background-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.gamePredictionContainer:hover {
+    background-color: #3d415e;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+/* ─────────────────────────── */
+/* Teams header */
+/* ─────────────────────────── */
+
+.predictionDetailsContainer {
+    background-color: #1a1d2e;
+    padding: 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: center;
+}
+
+.homeTeamContainer,
+.awayTeamContainer {
+    display: flex;           
+    flex-direction: column;
+    align-items: center;     
+    gap: 8px;
+    justify-content: center;   
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    flex: 1;
+}
+
+.homeTeamContainer img,
+.awayTeamContainer img {
+    width: 48px;        
+    height: 48px;
+    object-fit: contain;
+}
+
+.predictionDetailsContainer h1 {
+    margin: 0;
+    font-size: 14pt;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.predictionDetailsContainer > h1 {
+    font-size: 16pt;
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+/* ─────────────────────────── */
+/* Prediction data */
+/* ─────────────────────────── */
+
+.predictionContainer {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    font-size: 11pt;
+}
+
+.predictionContainer h1 {
+    margin: 0;
+    background-color: #1a1d2e;
+    padding: 10px 8px;
+    border-radius: 6px;
+    text-align: left;
+    font-weight: 400;
+    font-size: 11pt;
+    line-height: 1.3;
+}
+
+/* Make Winner and Spread full width */
+.predictionContainer h1:nth-child(1),
+.predictionContainer h1:nth-child(2) {
+    grid-column: span 2;
+    font-weight: 600;
+    font-size: 12pt;
+}
+
+/* Visual emphasis */
+.highlight {
+    font-weight: 600;
+}
+
+.vegas {
+    color: #FFD166;
+}

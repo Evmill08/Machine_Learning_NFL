@@ -1,12 +1,9 @@
 export interface GamePrediction{
     spreadPrediction: number;
     spreadRange: Array<number>;
-    spreadConfidence: Array<number>;
     totalPrediction: number;
     totalRange: Array<number>;
-    totalConfidence: Array<number>;
     winnerPrediction: string;
-    winnerConfidence: number;
     homeWinProbability: number;
     awayWinProbability: number;
 }

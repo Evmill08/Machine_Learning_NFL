@@ -26,7 +26,7 @@ namespace backend.Services
         private readonly IPredictorsService _predictorService;
         private readonly IWeeksService _weeksService;
         private readonly IWeatherService _weatherService;
-        private readonly int Year = DateTime.Now.Year;
+        private readonly int Year = DateTime.Now.Year - 1;
 
         public EventService(
             HttpClient httpClient,

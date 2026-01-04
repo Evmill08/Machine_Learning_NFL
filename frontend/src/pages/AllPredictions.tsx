@@ -1,13 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useGames } from "../hooks/useGames"
 import { GameData } from "../models/GameData";
-import { usePrediction } from "../hooks/useGamePrediction";
 import GamePredictionComponent from "../components/gamePredictionComponent";
+import styles from "../css/allPredictions.module.css"
+import { useNavigate } from "react-router-dom";
 
 
 export function AllPredictions() {
     const {weekNumber} = useParams();
     const {data: weeklyGames, isLoading: gamesAreLoading, error: gamesError} = useGames(parseInt(weekNumber!));
+    const navigate = useNavigate();
 
     if (weeklyGames){
         (weeklyGames as GameData[])
@@ -19,11 +21,25 @@ export function AllPredictions() {
     }
 
     return (
-        <div>
-            {weeklyGames.map((game: GameData, idx: number) => {
-                <GamePredictionComponent eventId={game.eventId} key={idx}/>
-            })}
+        <div className={styles.allPredictionsContainer}>
+            <h1>All Predictions</h1> 
+            <div className={styles.predictionsGrid}>
+                {weeklyGames.map((game: GameData) => (
+                    <GamePredictionComponent
+                    key={game.eventId}
+                    eventId={game.eventId}
+                    homeTeamId={game.homeTeamId}
+                    awayTeamId={game.awayTeamId}
+                />
+                ))}
+            </div>
+
+            <div className={styles.backButtonContainer}>
+                <button className={styles.backButton} onClick={() => navigate("/")}>Return Home</button>
+            </div>
         </div>
+
+
     )
 }
 

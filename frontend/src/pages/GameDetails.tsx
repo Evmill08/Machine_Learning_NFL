@@ -52,12 +52,10 @@ export function GameDetails() {
                     {oddsTabSelected ? (
                         <GameOddsTabComponent eventId={eventId}/>
                     ) : (
-                        <GamePredictionTabComponent eventId={eventId}/>
+                        <GamePredictionTabComponent eventId={eventId} homeTeamId={gameData.homeTeamId} awayTeamId={gameData.awayTeamId}/>
                     )}
                 </div>
             </div>
-
-  
 
             <button className={styles.returnHomeButton} onClick={() => navigate("/")}>Back</button>
         </div>

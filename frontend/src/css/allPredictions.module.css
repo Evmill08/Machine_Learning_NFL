@@ -1,0 +1,60 @@
+.predictionsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 12px;
+    align-items: start;
+    justify-content: center;
+    max-width: 90%;
+    margin: 0 0 5% 5%;
+}
+
+.allPredictionsContainer{
+    background-color: black;
+    color: #FDE8E9;
+    align-items: center;
+    justify-content: center;
+}
+
+.backButtonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 1.5rem;              
+  margin: 4rem auto 2rem;  
+  text-align: center;
+  max-width: 800px;
+  margin-bottom: 5%;
+}
+
+.backButton {
+  background-color: #2D3047;
+  color: #FDE8E9;
+
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2.5rem;
+
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  cursor: pointer;
+
+  transition: background-color 0.2s ease,
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: #3d415e;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.backButton:active {
+  transform: translateY(0) scale(0.98);
+}

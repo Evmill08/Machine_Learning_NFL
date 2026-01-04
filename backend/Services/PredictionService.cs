@@ -108,7 +108,8 @@ namespace backend.Services
 
         public async Task<IEnumerable<PredictionResponse>> GetPredictionsForWeekAsync()
         {
-            int currentSeasonYear = DateTime.Now.Year;
+            //TODO: Stinky fix because 2026 just happened 
+            int currentSeasonYear = DateTime.Now.Year - 1;
 
             var currentGames = await _eventService.GetEventsForCurrentWeek(currentSeasonYear);
             if (!currentGames.Any())
