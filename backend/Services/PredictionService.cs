@@ -10,7 +10,6 @@ namespace backend.Services
 {
     public interface IPredictionService
     {
-        // TODO: need a way to give the game ID or soemthing to this
         public Task<IEnumerable<PredictionResponse>> GetPredictionsForWeekAsync();
         public Task<PredictionResponse> GetPredictionsForEventAsync(string eventId);
         public Task<PredictionData> GetPredictionDataForEventAsync(string eventId);
