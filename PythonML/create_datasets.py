@@ -70,14 +70,6 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
         .apply(lambda x: '_'.join(sorted(x)), axis=1)
     )
 
-    # # Merge the home stats 
-    # home_stats = df_team_stats.merge(
-    #     df_game_stats,
-    #     left_on=['season', 'week', 'game_id', 'team_name'],
-    #     right_on=['season', 'week', 'game_id', 'HomeTeamName'],
-    #     how='inner'
-    # )
-
     home_stats = df_game_stats.merge(
         df_team_stats,
         left_on=['season', 'week', 'game_id', 'HomeTeamName'],
