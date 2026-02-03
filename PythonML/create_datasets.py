@@ -94,36 +94,6 @@ def create_dataset(df_team_stats_file: str, df_game_stats_file: str, df_game_sta
         how='left',
     )
 
-
-    # # Merge the away stats
-    # away_stats = df_team_stats.merge(
-    #     df_game_stats,
-    #     left_on=['season', 'week', 'game_id', 'opponent_name'],
-    #     right_on=['season', 'week', 'game_id', 'AwayTeamName'],
-    #     how='inner'
-    # )
-
-    # # Create properly named stats for the game to discern home and away
-    # home_stats = home_stats.rename(columns={c: f"{c}_home" for c in STAT_COLS})
-    # away_stats = away_stats.rename(columns={c: f"{c}_away" for c in STAT_COLS})
-
-    # # Merge the home and away stats into one column
-    # team_game_stats = home_stats.merge(
-    #     away_stats,
-    #     on=['season', 'week', 'game_id'],
-    #     how='inner'
-    # )
-
-    # # Merge the total game stats into the game data 
-    # final_df = df_game_stats.merge(
-    #     team_game_stats,
-    #     on=['season', 'week', 'game_id'],
-    #     how='left'
-    # )
-
-    # ========================
-    # 7. Save as CSV
-    # ========================
     merged_message = "2018-2024" if not current else "2025"
     final_df.to_csv(f"Data////TrainingData////{output_file}", index=False)
     print(f"Saved merged {merged_message} stats as {output_file}")
