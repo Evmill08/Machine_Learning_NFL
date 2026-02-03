@@ -73,8 +73,5 @@ final_df = df_b.merge(
     how='left'
 )
 
-# ========================
-# 7. Save as CSV
-# ========================
 final_df.to_csv('game_team_data_2025.csv', index=False)
 print("Saved merged 2018-2024 stats as merged_team_stats_2025.csv")
