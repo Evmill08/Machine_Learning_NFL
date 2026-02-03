@@ -55,7 +55,6 @@ namespace backend.Services
             var response = await _httpClient.GetFromJsonResilientAsync<EventsResponseDto>(url)
                 ?? throw new Exception($"Error fetching events response for week {weekNumber} of the {seasonYear} season");
 
-            // This is a really stupid way of doing this, but I'm not sure how to get the data from the eventResponseDto to the event in any other way since we aren't storing any of this data.
             return (
 
                 Response: response,
@@ -64,7 +63,6 @@ namespace backend.Services
             );
         }
 
-        // TODO: Look into changing this?? I think we call get event response when we already have a response?? We could pass this in from the higher level method??
         public async Task<IEnumerable<Event>> GetEventsByWeek(int seasonYear, int weekNumber)
         {
             var (response, season, week) = await GetEventsResponseAsync(seasonYear, weekNumber);
