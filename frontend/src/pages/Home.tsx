@@ -13,7 +13,6 @@ export function HomePage() {
     const [weekNumber, setWeekNumber] = useState<number | null>(null);
     const queryClient = useQueryClient();
 
-    // TODO: Fix this, cache the week number
     useEffect(() => {
         const loadWeekNumber = async () => {
             try {
@@ -72,11 +71,6 @@ export function HomePage() {
             {isLoading ?? (
                 <div>Loading games...</div>
             )}
-
-            {/*Have to fix this, but we also want to handle these errors more gracefully anyway */}
-            {/*{error ?? (
-                <div>Error loading games</div>
-            )}*/}
             
             <ul>
                 <div className={styles.gameGrid} >
