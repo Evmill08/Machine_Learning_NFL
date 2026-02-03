@@ -1,8 +1,5 @@
 import pandas as pd
 
-# ========================
-# 1. Load A & B
-# ========================
 df_a = pd.read_csv("Old Data\\\\team_stats_2018_2024.csv")
 df_b = pd.read_excel('Old Data\\\\NFL_Predictions.xlsx', sheet_name='Range_2018_2024')
 df_map = pd.read_excel('Old Data\\\\NFL_Predictions.xlsx', sheet_name='Map')
@@ -73,8 +70,5 @@ final_df = df_b.merge(
     how='left'
 )
 
-# ========================
-# 7. Save as CSV
-# ========================
 final_df.to_csv('game_team_data_2018_2024.csv', index=False)
 print("Saved merged 2018-2024 stats as merged_team_stats_2018_2024.csv")
