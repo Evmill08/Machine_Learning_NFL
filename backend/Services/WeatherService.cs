@@ -110,7 +110,6 @@ namespace backend.Services
                 return coordinates;
             }
 
-            // TODO: Figure this out: API key is in the headers but isn't being registered
             var url = $"https://api.api-ninjas.com/v1/geocoding?city={city}&country={country}&{_nijasApiKey}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
